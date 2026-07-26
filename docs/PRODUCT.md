@@ -14,6 +14,14 @@ Canonical product rules for engineering. UI, certificates, and Terms must not co
 4. The Certificate is **not** a warranty of correctness or outcome and is **not** legal advice.
 5. Use of the platform does **not** create an attorney-client relationship between student and client regarding the document.
 
+## Confidentiality & limited submissions (non-negotiable)
+
+1. **2dcite takes no responsibility** for confidential, privileged, sealed, or sensitive materials uploaded by the client.
+2. Clients may submit a **table of authorities only** (or similar citation list) to confirm existence/form of cases—full brief/order is optional.
+3. **Students are bound by confidentiality** and may not disclose non-public review information except as required by law.
+4. **Students may not disclose failed / hallucinated citations** (including that a particular lawyer or judge used non-existent authorities) **without prior written authorization** from the submitting party.
+5. Findings are delivered **only to the submitting party through the platform**.
+
 Implementation: `packages/shared/src/disclaimers.ts` (`DISCLAIMER_COPY_VERSION`). Bump version when acknowledgment text changes.
 
 ## Student eligibility (strict)

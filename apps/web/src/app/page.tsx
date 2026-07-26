@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   CERTIFICATE_BOILERPLATE,
+  CONFIDENTIALITY_CORE,
   FUNDS_HOLD_COPY,
   LIABILITY_CORE,
   PRICING_DEFAULTS,
@@ -71,6 +72,10 @@ export default function HomePage() {
             <p className="font-medium text-ink">Important</p>
             <p className="mt-1">{LIABILITY_CORE.ultimateLiability}</p>
             <p className="mt-2">{LIABILITY_CORE.nonDelegableDuty}</p>
+            <p className="mt-2">
+              {CONFIDENTIALITY_CORE.noResponsibilityForConfidential}
+            </p>
+            <p className="mt-2">{CONFIDENTIALITY_CORE.limitedSubmissionToa}</p>
           </div>
         </section>
 
@@ -91,17 +96,17 @@ export default function HomePage() {
                 {
                   step: "1",
                   title: "Upload & pay",
-                  body: "Attorney or judge uploads a PDF, chooses Standard or Rush, accepts liability acknowledgments, and pays. Funds are held by 2dcite.",
+                  body: "Upload a PDF brief/order—or only a table of authorities—choose Standard or Rush, accept liability and confidentiality acknowledgments, and pay. Funds are held by 2dcite.",
                 },
                 {
                   step: "2",
                   title: "Matched",
-                  body: "An approved 2L/3L student with no active assignment is auto-assigned and accepts the job.",
+                  body: "An approved 2L/3L student bound by confidentiality is auto-assigned and accepts the job.",
                 },
                 {
                   step: "3",
                   title: "Independent review",
-                  body: "Student reviews citations for accuracy, format, and whether authorities support the propositions—then attests.",
+                  body: "Student verifies citations (including existence of authorities) and reports findings only to you through the platform—not to third parties.",
                 },
                 {
                   step: "4",

@@ -192,13 +192,21 @@ export function NewJobForm() {
 
       <div className="block text-sm">
         <label htmlFor="job-pdf" className="font-medium text-ink">
-          PDF document (max ~{PRICING_DEFAULTS.maxPages} pages recommended)
+          PDF upload (max ~{PRICING_DEFAULTS.maxPages} pages recommended)
         </label>
+        <p id="job-pdf-hint" className="mt-1 text-xs text-muted">
+          You may upload a full brief or order, or limit the submission to a{" "}
+          <strong className="font-medium text-ink">table of authorities</strong>{" "}
+          (or similar citation list) to confirm existence and form of cases.
+          2dcite takes no responsibility for confidential materials you choose
+          to upload.
+        </p>
         <input
           id="job-pdf"
           type="file"
           accept="application/pdf,.pdf"
           required
+          aria-describedby="job-pdf-hint"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="mt-1 block w-full text-sm"
         />

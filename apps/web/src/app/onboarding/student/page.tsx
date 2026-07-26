@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { CONFIDENTIALITY_CORE } from "@2dcite/shared";
 import { getSessionUserFromCookies } from "@/lib/session";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { StudentApplicationForm } from "@/components/student/StudentApplicationForm";
@@ -22,6 +23,17 @@ export default async function StudentOnboardingPage() {
         <strong className="font-medium text-ink">APPROVED</strong> students can
         receive assignments (one at a time).
       </p>
+      <div
+        className="mt-4 max-w-2xl rounded-lg border border-border bg-accent-soft/50 p-4 text-sm text-muted"
+        role="note"
+      >
+        <p className="font-medium text-ink">Confidentiality obligations</p>
+        <p className="mt-2">{CONFIDENTIALITY_CORE.studentConfidentiality}</p>
+        <p className="mt-2">
+          {CONFIDENTIALITY_CORE.noDisclosureOfFailedCitations}
+        </p>
+        <p className="mt-2">{CONFIDENTIALITY_CORE.findingsOnlyToClient}</p>
+      </div>
       <StudentApplicationForm
         initial={{
           lawSchool: p?.lawSchool,

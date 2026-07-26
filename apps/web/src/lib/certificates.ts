@@ -156,6 +156,11 @@ export async function renderCertificatePdf(
     color: muted,
     gap: 6,
   });
+  draw(CERTIFICATE_BOILERPLATE.limitedSubmissionNote, {
+    size: 9,
+    color: muted,
+    gap: 6,
+  });
   draw(CERTIFICATE_BOILERPLATE.mayFileOrRetain, {
     size: 9,
     color: muted,
@@ -171,6 +176,13 @@ export async function renderCertificatePdf(
   ]) {
     draw(`• ${para}`, { size: 9, color: muted, gap: 6 });
   }
+
+  draw("Confidentiality", { size: 11, bold: true, gap: 4 });
+  draw(CERTIFICATE_BOILERPLATE.confidentiality, {
+    size: 9,
+    color: muted,
+    gap: 12,
+  });
 
   draw("Funds", { size: 11, bold: true, gap: 4 });
   draw(FUNDS_HOLD_COPY.releaseOnCertificate, {

@@ -7,7 +7,7 @@
  * Stored LiabilityAcknowledgment rows reference this version.
  */
 
-export const DISCLAIMER_COPY_VERSION = "2026-07-26.1";
+export const DISCLAIMER_COPY_VERSION = "2026-07-26.2";
 
 export const LIABILITY_CORE = {
   ultimateLiability:
@@ -24,9 +24,25 @@ export const LIABILITY_CORE = {
     "2dcite and student reviewers do not provide legal advice, co-counsel services, or authorization to file any document.",
 } as const;
 
+/** Confidentiality and limited submission scope */
+export const CONFIDENTIALITY_CORE = {
+  noResponsibilityForConfidential:
+    "2dcite takes no responsibility for confidential, privileged, sealed, or otherwise sensitive documents or information you choose to upload. You are solely responsible for determining what material is appropriate to submit and for complying with court orders, professional obligations, and applicable law.",
+  limitedSubmissionToa:
+    "Submissions may be limited to a table of authorities (or a comparable list of citations) solely to confirm the existence and citation form of authorities. You are not required to upload an entire brief or order if a limited submission is sufficient for the review you request.",
+  studentConfidentiality:
+    "Student reviewers are bound by confidentiality. Except as required by law, a student may not disclose any non-public information obtained through a review—including the identity of the submitting attorney or judge, the content of submitted materials, review findings, or the fact that a particular review occurred—to any third party.",
+  noDisclosureOfFailedCitations:
+    "Without prior written authorization from the submitting attorney or judge (the disclosing party), a student may not disclose that a citation did not pass review, failed verification, appeared fabricated or hallucinated, or otherwise did not support a proposition—including any disclosure that a particular lawyer or judge used non-existent or hallucinated authorities.",
+  findingsOnlyToClient:
+    "Review findings and any certificate are provided only to the submitting party through the platform (and platform administrators as needed to operate the service). Students must not share findings outside the platform.",
+  clientSoleRiskOfUpload:
+    "By uploading materials, you acknowledge that transmission and storage involve residual risk, and that 2dcite’s security measures do not create liability for unauthorized access, disclosure, or loss of confidential information beyond what applicable law non-waivably requires.",
+} as const;
+
 /** Short footer used across app shells */
 export const LIABILITY_FOOTER =
-  "Citation review on 2dcite is an independent verification layer only. Ultimate liability remains with the licensed attorney or judge. Checking citations is a non-delegable duty.";
+  "Citation review on 2dcite is an independent verification layer only. Ultimate liability remains with the licensed attorney or judge. Checking citations is a non-delegable duty. 2dcite takes no responsibility for confidential materials you upload. Students are bound by confidentiality and may not disclose failed or hallucinated citations without written authorization from the submitting party.";
 
 /** Required checkboxes before client pays / submits a job */
 export const CLIENT_SUBMIT_ACKNOWLEDGMENTS = [
@@ -46,11 +62,29 @@ export const CLIENT_SUBMIT_ACKNOWLEDGMENTS = [
     id: "not_legal_advice",
     text: LIABILITY_CORE.notLegalAdvice,
   },
+  {
+    id: "confidential_documents",
+    text: CONFIDENTIALITY_CORE.noResponsibilityForConfidential,
+  },
+  {
+    id: "limited_toa_ok",
+    text: CONFIDENTIALITY_CORE.limitedSubmissionToa,
+  },
+  {
+    id: "student_confidentiality_understood",
+    text: `${CONFIDENTIALITY_CORE.studentConfidentiality} ${CONFIDENTIALITY_CORE.noDisclosureOfFailedCitations}`,
+  },
 ] as const;
 
-/** Required attestation before student submits a review */
+/**
+ * Required attestation before student submits a review.
+ * Includes confidentiality and non-disclosure of failed/hallucinated citations.
+ */
 export const STUDENT_REVIEW_ATTESTATION =
-  "I completed an independent citation review of the assigned document. I am not providing legal advice or co-counsel services. Ultimate liability for the document remains with the licensed attorney or judge. I understand that checking citations is a non-delegable professional duty and that my work is an independent verification layer only.";
+  "I completed an independent citation review of the assigned materials. I am not providing legal advice or co-counsel services. Ultimate liability for the document remains with the licensed attorney or judge. I understand that checking citations is a non-delegable professional duty and that my work is an independent verification layer only. " +
+  "I am bound by confidentiality: except as required by law, I will not disclose any non-public information from this review—including the identity of the submitting attorney or judge, the content of submitted materials, my findings, or the fact of this review—to any third party. " +
+  "Without prior written authorization from the submitting attorney or judge, I will not disclose that any citation failed verification, did not pass review, appeared fabricated or hallucinated, or that a particular lawyer or judge used non-existent or hallucinated authorities. " +
+  "I will communicate findings only through the 2dcite platform to the submitting party (and will not share findings outside the platform).";
 
 /** Certificate boilerplate (injected into generated PDF) */
 export const CERTIFICATE_BOILERPLATE = {
@@ -60,6 +94,10 @@ export const CERTIFICATE_BOILERPLATE = {
   nonDelegable: LIABILITY_CORE.nonDelegableDuty,
   noResponsibility: LIABILITY_CORE.noPlatformResponsibility,
   notLegalAdvice: LIABILITY_CORE.notLegalAdvice,
+  confidentiality:
+    "Submitted materials may be confidential. 2dcite takes no responsibility for confidential documents uploaded by the submitting party. Student reviewers are bound by confidentiality and, without written authorization from the submitting party, may not disclose failed verifications or alleged use of fabricated or hallucinated authorities.",
+  limitedSubmissionNote:
+    "Reviews may be based on a full document or a limited submission such as a table of authorities, as provided by the submitting party, for verification of the existence and form of cited authorities.",
   mayFileOrRetain:
     "This certificate may be filed with the underlying document or retained by the attorney or judge as evidence of risk mitigation and best efforts through independent verification.",
 } as const;

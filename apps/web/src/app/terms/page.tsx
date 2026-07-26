@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  CONFIDENTIALITY_CORE,
   DISCLAIMER_COPY_VERSION,
   FUNDS_HOLD_COPY,
   LIABILITY_CORE,
@@ -107,39 +108,76 @@ export default function TermsPage() {
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          6. Documents and confidentiality
+          6. Documents, limited submissions, and confidentiality
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
-          You represent that you have the right to upload documents and that
+          You represent that you have the right to upload materials and that
           doing so does not violate court rules, protective orders, or third-party
-          rights. The Platform will implement reasonable technical and
-          organizational measures to protect documents and limit access to job
-          participants and administrators. See the Privacy Policy for details.
+          rights.
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.noResponsibilityForConfidential}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.limitedSubmissionToa}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.clientSoleRiskOfUpload}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          The Platform will implement reasonable technical and organizational
+          measures to limit access to job participants and administrators. See
+          the Privacy Policy for details. Those measures do not create
+          responsibility for confidential content you elect to submit.
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          7. Acceptable use
+          7. Student confidentiality and non-disclosure of failed citations
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.studentConfidentiality}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.noDisclosureOfFailedCitations}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.findingsOnlyToClient}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          Students agree to these obligations as a condition of receiving
+          assignments and submitting reviews. Breach may result in suspension,
+          forfeiture of payouts, and other remedies. “Required by law” includes
+          valid court orders, lawful subpoenas, and other compulsory process;
+          where legally permitted, students and the Platform will provide notice
+          to the submitting party before disclosure.
+        </p>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          8. Acceptable use
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           You may not use the Platform for unlawful purposes, to harass others,
-          to upload malware, to circumvent eligibility rules, or to misrepresent
-          credentials. We may suspend accounts for abuse or risk.
+          to upload malware, to circumvent eligibility rules, to misrepresent
+          credentials, or to pressure students to disclose confidential review
+          outcomes outside the Platform. We may suspend accounts for abuse or
+          risk.
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          8. Limitation of liability
+          9. Limitation of liability
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           To the fullest extent permitted by law, 2dcite and its operators are
           not liable for professional malpractice claims arising from your
           filings, for student review quality beyond the platform’s stated
-          facilitation role, or for consequential damages. Aggregate liability
-          related to a job is limited to fees paid for that job. Some
-          jurisdictions do not allow certain limitations.
+          facilitation role, for confidential materials you upload, for
+          unauthorized disclosure by third parties, or for consequential damages.
+          Aggregate liability related to a job is limited to fees paid for that
+          job. Some jurisdictions do not allow certain limitations.
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          9. Contact
+          10. Contact
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           Questions:{" "}

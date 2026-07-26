@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SUPPORT_EMAIL } from "@2dcite/shared";
+import { CONFIDENTIALITY_CORE, SUPPORT_EMAIL } from "@2dcite/shared";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 
 export const metadata: Metadata = {
@@ -36,8 +36,8 @@ export default function PrivacyPage() {
             uploaded proof documents
           </li>
           <li>
-            Job materials: PDF briefs/orders, titles, instructions, review
-            findings, certificates
+            Job materials: PDF briefs/orders, tables of authorities, titles,
+            instructions, review findings, certificates
           </li>
           <li>
             Payment data processed by Stripe (we do not store full card numbers)
@@ -65,6 +65,29 @@ export default function PrivacyPage() {
           reverse) as needed to perform the review. We use processors such as
           hosting providers, email delivery, object storage, and Stripe for
           payments. We do not sell personal information.
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.findingsOnlyToClient}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          Students are contractually bound not to disclose review materials or
+          outcomes outside the platform, including that a citation failed or
+          appeared fabricated, except as required by law or with prior written
+          authorization from the submitting attorney or judge. See the Terms of
+          Service.
+        </p>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          Confidential materials
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.noResponsibilityForConfidential}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.limitedSubmissionToa}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.clientSoleRiskOfUpload}
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
