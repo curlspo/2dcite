@@ -5,10 +5,11 @@ import {
   type SubmitReviewBody,
 } from "@2dcite/shared";
 import { writeAudit } from "@/lib/audit";
+import { issueCertificateAndReleaseFunds } from "@/lib/certificates";
 
 /**
  * Student submits structured citation review.
- * Phase 3: job → COMPLETED (certificate + fund release in Phase 4).
+ * Creates review → COMPLETED briefly → auto Certificate + fund release → CERTIFIED.
  */
 export async function submitReview(
   jobId: string,
@@ -50,8 +51,8 @@ export async function submitReview(
   const now = new Date();
   const platform = body.platform === "IOS" ? "IOS" : "WEB";
 
-  const result = await prisma.$transaction(async (tx) => {
-    const review = await tx.review.create({
+  await prisma.$transaction(async (tx) => {
+    await tx.review.create({
       data: {
         jobId,
         findings: body.findings as unknown as Prisma.InputJsonValue,
@@ -63,19 +64,11 @@ export async function submitReview(
       },
     });
 
-    const updated = await tx.job.update({
+    await tx.job.update({
       where: { id: jobId },
       data: {
         status: "COMPLETED",
         completedAt: now,
-      },
-      include: {
-        payment: true,
-        payout: true,
-        certificate: true,
-        review: true,
-        student: { select: { id: true, name: true } },
-        client: { select: { id: true, name: true, email: true, role: true } },
       },
     });
 
@@ -91,9 +84,14 @@ export async function submitReview(
         },
       },
     });
-
-    return { job: updated, review };
   });
 
-  return result;
+  // Certificate + release student share (outside short review tx; PDF generation)
+  const certified = await issueCertificateAndReleaseFunds(jobId);
+
+  return {
+    job: certified,
+    review: await prisma.review.findUniqueOrThrow({ where: { jobId } }),
+    certificate: certified.certificate,
+  };
 }

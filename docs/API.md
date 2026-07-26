@@ -57,13 +57,21 @@ Session tokens are random secrets stored as SHA-256 hashes. Clients may send:
 
 Matching: after pay, auto-assign next **APPROVED** student with zero active jobs; **RUSH** before standard. Accept timeout requeues.
 
-### Planned (Phase 4+)
+### Implemented (Phase 4)
+
+| Method / event | Path | Notes |
+|----------------|------|--------|
+| On review submit | — | Review → COMPLETED → **Certificate PDF** → **CERTIFIED** + payout **RELEASED** |
+| GET | `/jobs/:id/certificate` | metadata; `?download=1` PDF. Backfills cert for legacy COMPLETED jobs |
+
+Funds: student share released only when certificate is issued (idempotent). Platform fee retained. Stripe Connect bank transfer is post-MVP (ledger marks RELEASED).
+
+### Planned (later)
 
 | Method | Path | Notes |
 |--------|------|--------|
-| (on review) | auto certificate | COMPLETED → CERTIFIED + **payout RELEASED** |
-| GET | `/jobs/:id/certificate` | download PDF cert |
 | GET | `/admin/payouts` | HELD \| RELEASED \| REFUNDED |
+| Stripe Connect | — | real student bank transfers |
 
 ### `GET /health`
 

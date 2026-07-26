@@ -118,6 +118,34 @@ export default async function JobDetailPage({
         </p>
       )}
 
+      {job.certificate && (
+        <div className="mt-8 rounded-lg border border-gold/40 bg-accent-soft/50 p-5 text-sm">
+          <p className="font-medium text-ink">Certificate of Citation Review</p>
+          <p className="mt-1 text-muted">
+            {job.certificate.certNumber} · issued{" "}
+            {new Date(job.certificate.issuedAt).toLocaleString()}
+          </p>
+          {job.payout && (
+            <p className="mt-2 text-muted">
+              Student payout: <strong className="text-ink">{job.payout.status}</strong>
+              {job.payout.releasedAt
+                ? ` · ${new Date(job.payout.releasedAt).toLocaleString()}`
+                : ""}
+            </p>
+          )}
+          <a
+            href={`/api/v1/jobs/${job.id}/certificate?download=1`}
+            className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            Download certificate PDF
+          </a>
+          <p className="mt-2 text-xs text-muted">
+            May be filed with the document or retained as evidence of best
+            efforts. Liability remains with the licensed attorney or judge.
+          </p>
+        </div>
+      )}
+
       {job.review && (
         <div className="mt-8 rounded-lg border border-border bg-card p-5 text-sm">
           <p className="font-medium text-ink">Review findings</p>

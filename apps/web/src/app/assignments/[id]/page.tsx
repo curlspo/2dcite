@@ -97,10 +97,33 @@ export default async function AssignmentDetailPage({
         </div>
       )}
 
-      {job.status === "COMPLETED" && (
-        <p className="mt-6 text-sm text-muted">
-          Review complete. Certificate generation and fund release are Phase 4.
-        </p>
+      {(job.status === "COMPLETED" || job.status === "CERTIFIED") && (
+        <div className="mt-6 rounded-lg border border-border bg-card p-4 text-sm text-muted">
+          <p className="font-medium text-ink">
+            {job.status === "CERTIFIED"
+              ? "Certificate issued"
+              : "Review complete"}
+          </p>
+          {job.certificate && (
+            <>
+              <p className="mt-1">
+                {job.certificate.certNumber} ·{" "}
+                {new Date(job.certificate.issuedAt).toLocaleString()}
+              </p>
+              <a
+                href={`/api/v1/jobs/${job.id}/certificate?download=1`}
+                className="mt-2 inline-block text-accent underline"
+              >
+                Download certificate PDF
+              </a>
+            </>
+          )}
+          {job.payout && (
+            <p className="mt-2">
+              Your share: payout status <strong>{job.payout.status}</strong>
+            </p>
+          )}
+        </div>
       )}
     </AppShell>
   );

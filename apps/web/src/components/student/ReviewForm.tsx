@@ -52,7 +52,10 @@ export function ReviewForm({ jobId }: { jobId: string }) {
     }
     setLoading(true);
     try {
-      const res = await apiFetch<{ message: string }>(`/jobs/${jobId}/review`, {
+      const res = await apiFetch<{
+        message: string;
+        certificate?: { certNumber: string; downloadPath: string };
+      }>(`/jobs/${jobId}/review`, {
         method: "POST",
         body: JSON.stringify({
           findings: findings.map((f) => ({
@@ -66,7 +69,11 @@ export function ReviewForm({ jobId }: { jobId: string }) {
           platform: "WEB",
         }),
       });
-      setMessage(res.message);
+      setMessage(
+        res.certificate
+          ? `${res.message} Certificate ${res.certificate.certNumber}.`
+          : res.message
+      );
       router.refresh();
     } catch (err) {
       setError(err instanceof BrowserApiError ? err.message : "Submit failed");

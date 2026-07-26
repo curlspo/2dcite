@@ -11,7 +11,10 @@ import { writeAudit } from "@/lib/audit";
  * Assign a single QUEUED job to an available approved student.
  * Returns assigned job or null if no job/student available.
  */
-export async function assignJobIfPossible(jobId?: string) {
+export async function assignJobIfPossible(
+  jobId?: string,
+  excludeUserIds: string[] = []
+) {
   // Expire stale assignments first
   await reassignTimedOutAssignments();
 
@@ -21,10 +24,7 @@ export async function assignJobIfPossible(jobId?: string) {
 
   if (!job || job.status !== "QUEUED") return null;
 
-  const exclude: string[] = [];
-  // Prefer not re-assigning same student if we tracked declines — MVP: any available
-
-  const student = await findNextAvailableStudent(prisma, exclude);
+  const student = await findNextAvailableStudent(prisma, excludeUserIds);
   if (!student) return null;
 
   const now = new Date();
@@ -203,7 +203,7 @@ export async function declineAssignment(jobId: string, studentId: string) {
     entityId: jobId,
   });
 
-  // Try next student (exclude decliner via brief window: they'll have no active job)
-  const reassigned = await assignJobIfPossible(jobId);
+  // Do not immediately re-assign the student who just declined
+  const reassigned = await assignJobIfPossible(jobId, [studentId]);
   return reassigned;
 }

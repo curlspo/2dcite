@@ -81,7 +81,7 @@ Change before any real deployment.
 | **1** | Auth, student application, admin approve, eligibility gate | Done |
 | **2** | Jobs, PDF upload, Stripe/dev pay, **payment hold** | Done |
 | **3** | Matching, accept/decline, student review | Done |
-| **4** | Certificate PDF + **fund release** | |
+| **4** | Certificate PDF + **fund release** | Done |
 | **5** | 2dcite.com launch polish | |
 | **6** | TestFlight / App Store | |
 

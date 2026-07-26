@@ -27,8 +27,15 @@ export async function POST(
           ? review.findings.length
           : 0,
       },
+      certificate: job.certificate
+        ? {
+            certNumber: job.certificate.certNumber,
+            issuedAt: job.certificate.issuedAt,
+            downloadPath: `/api/v1/jobs/${id}/certificate?download=1`,
+          }
+        : null,
       message:
-        "Review submitted. Job is COMPLETED. Certificate generation and fund release ship in Phase 4.",
+        "Review submitted. Certificate of Citation Review issued. Student share released from hold; platform fee retained.",
     });
   } catch (err) {
     return handleRouteError(err);
