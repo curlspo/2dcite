@@ -47,3 +47,6 @@ packages/db/.env
 
 .vercel
 .env*
+
+# local smoke / scratch
+tmp/

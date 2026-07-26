@@ -1,6 +1,6 @@
 # 2dcite.com — Soft launch checklist
 
-## Product readiness (Phases 0–4)
+## Product readiness (Phases 0–6)
 
 - [x] Auth (web + token for mobile)
 - [x] Student eligibility + admin approve
@@ -9,6 +9,8 @@
 - [x] Matching, accept/decline, review
 - [x] Certificate PDF + fund release
 - [x] Admin overview, reassign, payouts, audit (Phase 5)
+- [x] iOS Expo app (client + student flows) — see [IOS.md](./IOS.md)
+- [ ] App Store Connect listing + TestFlight (EAS submit)
 
 ## Before public traffic
 
@@ -42,6 +44,7 @@
 - [ ] Admin login smoke test: students, reassign, payouts, audit
 - [ ] Attorney happy path: pay → match → cert download
 - [ ] Student happy path: accept → review → payout RELEASED
+- [ ] iOS happy path on simulator / TestFlight (see [IOS.md](./IOS.md))
 - [ ] Error monitoring (e.g. Sentry) optional
 - [ ] Backup policy for DB and uploads
 

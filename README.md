@@ -83,7 +83,7 @@ Change before any real deployment.
 | **3** | Matching, accept/decline, student review | Done |
 | **4** | Certificate PDF + **fund release** | Done |
 | **5** | Launch polish, legal drafts, admin ops, checklist | Done |
-| **6** | TestFlight / App Store | |
+| **6** | iOS Expo app (client + student flows, EAS) | Done (store submit pending) |
 
 ## Liability copy
 

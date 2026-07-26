@@ -4,6 +4,7 @@ import type {
   MeResponse,
   RegisterBody,
   StudentApplicationBody,
+  SubmitReviewBody,
 } from "@2dcite/shared";
 
 export type ApiClientOptions = {
@@ -30,6 +31,43 @@ export type AuthResponse = {
   };
 };
 
+export type JobDto = {
+  id: string;
+  title: string;
+  instructions?: string | null;
+  status: string;
+  turnaroundTier: string;
+  grossFeeCents: number;
+  grossFeeDisplay?: string;
+  studentFeeCents?: number;
+  dueAt?: string | null;
+  assignedAt?: string | null;
+  acceptedAt?: string | null;
+  completedAt?: string | null;
+  certifiedAt?: string | null;
+  createdAt: string;
+  pdfFileName?: string | null;
+  payment?: { status: string; paidAt?: string | null } | null;
+  payout?: {
+    status: string;
+    studentAmountCents: number;
+    releasedAt?: string | null;
+  } | null;
+  certificate?: {
+    id: string;
+    certNumber: string;
+    issuedAt: string;
+  } | null;
+  review?: {
+    id: string;
+    findings: unknown;
+    overallNotes?: string | null;
+    submittedAt: string;
+  } | null;
+  student?: { id: string; name: string } | null;
+  client?: { id: string; name: string; email: string; role: string } | null;
+};
+
 export function createApiClient(options: ApiClientOptions) {
   const fetchFn = options.fetch ?? fetch;
 
@@ -39,11 +77,9 @@ export function createApiClient(options: ApiClientOptions) {
   ): Promise<T> {
     const token = options.getToken ? await options.getToken() : null;
     const headers = new Headers(init.headers);
-    if (
-      init.body &&
-      !(typeof FormData !== "undefined" && init.body instanceof FormData) &&
-      !headers.has("Content-Type")
-    ) {
+    const isForm =
+      typeof FormData !== "undefined" && init.body instanceof FormData;
+    if (init.body && !isForm && !headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
     }
     if (token) {
@@ -56,14 +92,26 @@ export function createApiClient(options: ApiClientOptions) {
     });
 
     const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
+    let data: unknown = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { error: text };
+      }
+    }
 
     if (!res.ok) {
-      throw new ApiError(
-        res.status,
-        (data && data.error) || res.statusText || "Request failed",
-        data
-      );
+      let message = res.statusText || "Request failed";
+      if (
+        data &&
+        typeof data === "object" &&
+        data !== null &&
+        "error" in data
+      ) {
+        message = String((data as { error: unknown }).error);
+      }
+      throw new ApiError(res.status, message, data);
     }
     return data as T;
   }
@@ -81,8 +129,69 @@ export function createApiClient(options: ApiClientOptions) {
         method: "POST",
         body: JSON.stringify(body),
       }),
-    logout: () =>
-      request<{ ok: true }>("/auth/logout", { method: "POST" }),
+    logout: () => request<{ ok: true }>("/auth/logout", { method: "POST" }),
+
+    pricing: () =>
+      request<{
+        disclaimerCopyVersion: string;
+        acknowledgments: { id: string; text: string }[];
+        tiers: Record<
+          string,
+          { display: string; grossCents: number; label: string }
+        >;
+        stripeEnabled: boolean;
+        fundsHold: Record<string, string>;
+      }>("/pricing"),
+
+    listJobs: () => request<{ jobs: JobDto[] }>("/jobs"),
+    getJob: (id: string) => request<{ job: JobDto }>(`/jobs/${id}`),
+    createJob: (body: unknown) =>
+      request<{ job: JobDto }>("/jobs", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    checkoutJob: (id: string, body?: { devMock?: boolean }) =>
+      request<{ mode: string; url?: string; job?: JobDto; message?: string }>(
+        `/jobs/${id}/checkout`,
+        {
+          method: "POST",
+          body: JSON.stringify(body ?? {}),
+        }
+      ),
+    acceptJob: (id: string) =>
+      request<{ job: JobDto }>(`/jobs/${id}/accept`, { method: "POST" }),
+    declineJob: (id: string) =>
+      request<{ ok: boolean; job: JobDto | null }>(`/jobs/${id}/decline`, {
+        method: "POST",
+      }),
+    submitReview: (id: string, body: SubmitReviewBody) =>
+      request<{
+        job: JobDto;
+        message: string;
+        certificate?: { certNumber: string; downloadPath: string };
+      }>(`/jobs/${id}/review`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    getCertificateMeta: (id: string) =>
+      request<{
+        certificate: {
+          certNumber: string;
+          issuedAt: string;
+          downloadPath: string;
+        };
+        payout: { status: string } | null;
+        jobStatus: string;
+      }>(`/jobs/${id}/certificate`),
+
+    listAssignments: () =>
+      request<{
+        eligibleForMatching: boolean;
+        gateMessage: string | null;
+        active: JobDto[];
+        history: JobDto[];
+      }>("/student/assignments"),
+
     getStudentApplication: () =>
       request<{
         user: MeResponse;
@@ -94,33 +203,35 @@ export function createApiClient(options: ApiClientOptions) {
         method: "POST",
         body: JSON.stringify(body),
       }),
-    listAdminStudents: (status?: string) =>
-      request<{ students: unknown[] }>(
-        `/admin/students${status ? `?status=${status}` : ""}`
-      ),
-    approveStudent: (id: string) =>
-      request(`/admin/students/${id}/approve`, { method: "POST" }),
-    rejectStudent: (id: string, reason?: string) =>
-      request(`/admin/students/${id}/reject`, {
+
+    /** Multipart upload; returns storage key */
+    uploadFile: async (file: {
+      uri: string;
+      name: string;
+      type: string;
+    }, purpose: string) => {
+      const token = options.getToken ? await options.getToken() : null;
+      const form = new FormData();
+      // React Native FormData file shape
+      form.append("file", {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      } as unknown as Blob);
+      form.append("purpose", purpose);
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetchFn(`${options.baseUrl}/uploads`, {
         method: "POST",
-        body: JSON.stringify({ reason }),
-      }),
-    pricing: () => request<Record<string, unknown>>("/pricing"),
-    listJobs: () => request<{ jobs: unknown[] }>("/jobs"),
-    getJob: (id: string) => request<{ job: unknown }>(`/jobs/${id}`),
-    createJob: (body: unknown) =>
-      request<{ job: { id: string } }>("/jobs", {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
-    checkoutJob: (id: string, body?: { devMock?: boolean }) =>
-      request<{ mode: string; url?: string; job?: unknown }>(
-        `/jobs/${id}/checkout`,
-        {
-          method: "POST",
-          body: JSON.stringify(body ?? {}),
-        }
-      ),
+        headers,
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new ApiError(res.status, data?.error || "Upload failed", data);
+      }
+      return data as { key: string; fileName: string };
+    },
   };
 }
 
