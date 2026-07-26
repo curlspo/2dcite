@@ -89,9 +89,18 @@ Change before any real deployment.
 
 Import from `@2dcite/shared` only (`disclaimers.ts`). Do not hardcode divergent legal strings in UI.
 
-## Launch
+## Launch & deploy
 
-See [`docs/LAUNCH.md`](./docs/LAUNCH.md) for the soft-launch checklist (DNS, Stripe live keys, counsel review, Postgres, domain).
+- Soft-launch checklist: [`docs/LAUNCH.md`](./docs/LAUNCH.md)
+- **Production deploy (Vercel + 2dcite.com):** [`docs/DEPLOY.md`](./docs/DEPLOY.md)
+- Env template: [`.env.production.example`](./.env.production.example)
+
+```bash
+npm i -g vercel && vercel login
+cd apps/web && vercel link   # once
+# Set env vars in Vercel dashboard (DATABASE_URL, AUTH_SECRET, Stripe, Blob…)
+pnpm deploy:prod             # from monorepo root
+```
 
 ## License
 

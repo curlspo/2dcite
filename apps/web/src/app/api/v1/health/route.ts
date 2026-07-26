@@ -1,14 +1,38 @@
 import { NextResponse } from "next/server";
 import type { HealthResponse } from "@2dcite/shared";
+import { storageMode } from "@/lib/storage";
+import { stripeEnabled } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const body: HealthResponse = {
+  let db: "ok" | "error" | "skipped" = "skipped";
+  try {
+    if (process.env.DATABASE_URL) {
+      const { prisma } = await import("@2dcite/db");
+      await prisma.$queryRaw`SELECT 1`;
+      db = "ok";
+    }
+  } catch {
+    db = "error";
+  }
+
+  const body: HealthResponse & {
+    env: string;
+    storage: string;
+    stripe: boolean;
+    db: string;
+  } = {
     ok: true,
     service: "2dcite-api",
     version: "0.1.0",
     time: new Date().toISOString(),
+    env: process.env.VERCEL_ENV || process.env.NODE_ENV || "unknown",
+    storage: storageMode(),
+    stripe: stripeEnabled(),
+    db,
   };
-  return NextResponse.json(body);
+
+  const status = db === "error" ? 503 : 200;
+  return NextResponse.json(body, { status });
 }

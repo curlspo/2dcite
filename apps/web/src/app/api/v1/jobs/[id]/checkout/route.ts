@@ -43,14 +43,27 @@ export async function POST(
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    // Dev mock payment when Stripe not configured
+    const isProd =
+      process.env.NODE_ENV === "production" ||
+      process.env.VERCEL_ENV === "production";
+    const allowMock =
+      process.env.ALLOW_DEV_MOCK_PAY === "true" ||
+      (!isProd && process.env.ALLOW_DEV_MOCK_PAY !== "false");
+
+    // Dev mock payment when Stripe not configured (blocked on production by default)
     if (!stripeEnabled() || body.devMock === true) {
-      if (stripeEnabled() && body.devMock === true && process.env.NODE_ENV === "production") {
+      if (body.devMock === true && isProd && process.env.ALLOW_DEV_MOCK_PAY !== "true") {
         return jsonError("Dev mock payment disabled in production", 403);
       }
       if (stripeEnabled() && body.devMock !== true) {
         // fall through to Stripe
-      } else {
+      } else if (!stripeEnabled() && !allowMock) {
+        return jsonError(
+          "Payments are not configured. Set STRIPE_SECRET_KEY for production.",
+          503,
+          "STRIPE_REQUIRED"
+        );
+      } else if (!stripeEnabled() || body.devMock === true) {
         const paid = await markJobPaid({
           jobId: job.id,
           actorId: user.id,

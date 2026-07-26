@@ -13,7 +13,10 @@
     "db:generate": "pnpm --filter @2dcite/db generate",
     "db:push": "pnpm --filter @2dcite/db push",
     "db:studio": "pnpm --filter @2dcite/db studio",
-    "db:seed": "pnpm --filter @2dcite/db seed"
+    "db:seed": "pnpm --filter @2dcite/db seed",
+    "check:prod-env": "node scripts/check-production-env.mjs",
+    "deploy:prod": "cd apps/web && vercel --prod",
+    "deploy:preview": "cd apps/web && vercel"
   },
   "devDependencies": {
     "turbo": "^2.5.4",

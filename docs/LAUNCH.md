@@ -45,15 +45,20 @@
 - [ ] Error monitoring (e.g. Sentry) optional
 - [ ] Backup policy for DB and uploads
 
-## Deploy sketch (Vercel)
+## Deploy
+
+Full step-by-step: **[docs/DEPLOY.md](./DEPLOY.md)**
 
 ```bash
-cd apps/web
-# Link project, set env vars from .env.example (production values)
+# CLI
+npm i -g vercel && vercel login
+cd ~/2dcite/apps/web
+vercel link
+# Set env vars in Vercel dashboard (see .env.production.example)
 vercel --prod
 ```
 
-Root monorepo: set Vercel root to `apps/web`, install from monorepo root with pnpm, build `pnpm --filter @2dcite/web build`.
+Or: `pnpm deploy:prod` from monorepo root after linking.
 
 ## Post-launch (Phase 6+)
 

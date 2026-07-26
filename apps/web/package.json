@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "next build",
+    "build": "pnpm --filter @2dcite/db generate && next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -12,6 +12,7 @@
     "@2dcite/api-client": "workspace:*",
     "@2dcite/db": "workspace:*",
     "@2dcite/shared": "workspace:*",
+    "@vercel/blob": "^2.6.1",
     "bcryptjs": "^3.0.3",
     "next": "^15.3.4",
     "pdf-lib": "^1.17.1",

@@ -12,6 +12,10 @@ export const healthResponseSchema = z.object({
   service: z.literal("2dcite-api"),
   version: z.string(),
   time: z.string(),
+  env: z.string().optional(),
+  storage: z.string().optional(),
+  stripe: z.boolean().optional(),
+  db: z.string().optional(),
 });
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
 
