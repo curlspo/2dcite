@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  // Local/dev default: SQLite. Production can use PostgreSQL by switching
-  // provider + DATABASE_URL (schema is portable for our models).
-  provider = "sqlite"
+  // Production: Neon/Postgres. Local: docker compose or Neon.
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
