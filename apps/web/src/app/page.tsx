@@ -4,11 +4,23 @@ import {
   FUNDS_HOLD_COPY,
   LIABILITY_CORE,
   PRICING_DEFAULTS,
+  SUPPORT_EMAIL,
+  computeFeeBreakdown,
 } from "@2dcite/shared";
 import { LiabilityFooter } from "@/components/legal/LiabilityFooter";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 
+function usd(cents: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(cents / 100);
+}
+
 export default function HomePage() {
+  const standard = computeFeeBreakdown({ isRush: false });
+  const rush = computeFeeBreakdown({ isRush: true });
+
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
@@ -45,6 +57,12 @@ export default function HomePage() {
             >
               Apply as a student
             </Link>
+            <Link
+              href="/login"
+              className="rounded-md px-5 py-2.5 text-sm font-medium text-muted hover:text-ink"
+            >
+              Sign in
+            </Link>
           </div>
           <div className="mt-10 max-w-2xl rounded-lg border border-border bg-accent-soft/50 p-4 text-sm text-muted">
             <p className="font-medium text-ink">Important</p>
@@ -66,7 +84,7 @@ export default function HomePage() {
                 {
                   step: "1",
                   title: "Upload & pay",
-                  body: "Attorney or judge uploads a PDF, chooses Standard (48h) or Rush, accepts liability acknowledgments, and pays. Funds are held by 2dcite.",
+                  body: "Attorney or judge uploads a PDF, chooses Standard or Rush, accepts liability acknowledgments, and pays. Funds are held by 2dcite.",
                 },
                 {
                   step: "2",
@@ -102,14 +120,43 @@ export default function HomePage() {
               {FUNDS_HOLD_COPY.clientPayOnUpload}{" "}
               {FUNDS_HOLD_COPY.releaseOnCertificate}
             </p>
-            <p className="mt-2 text-sm text-muted">
-              Standard turnaround: {PRICING_DEFAULTS.standardSlaHours} hours
-              after student accept. Rush available for an additional fee.
-            </p>
           </div>
         </section>
 
-        <section id="eligibility" className="py-16">
+        <section id="pricing" className="py-16">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="font-serif text-2xl font-semibold text-ink">
+              Simple fixed pricing
+            </h2>
+            <p className="mt-2 max-w-2xl text-muted">
+              One transparent fee per job (placeholder amounts—confirm before
+              launch). Recommended max {PRICING_DEFAULTS.maxPages} pages for MVP.
+            </p>
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              <div className="rounded-lg border border-border bg-card p-6">
+                <p className="text-sm font-medium text-gold">Standard</p>
+                <p className="mt-2 font-serif text-3xl font-semibold text-ink">
+                  {usd(standard.grossCents)}
+                </p>
+                <p className="mt-2 text-sm text-muted">
+                  {PRICING_DEFAULTS.standardSlaHours} hours after student accepts
+                </p>
+              </div>
+              <div className="rounded-lg border border-accent bg-accent-soft/40 p-6">
+                <p className="text-sm font-medium text-gold">Rush</p>
+                <p className="mt-2 font-serif text-3xl font-semibold text-ink">
+                  {usd(rush.grossCents)}
+                </p>
+                <p className="mt-2 text-sm text-muted">
+                  {PRICING_DEFAULTS.rushSlaHours} hours after accept · priority
+                  matching
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="eligibility" className="border-t border-border bg-card py-16">
           <div className="mx-auto max-w-5xl px-6">
             <h2 className="font-serif text-2xl font-semibold text-ink">
               Student eligibility
@@ -128,7 +175,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="border-t border-border bg-card py-16">
+        <section className="border-t border-border py-16">
           <div className="mx-auto max-w-5xl px-6">
             <h2 className="font-serif text-2xl font-semibold text-ink">
               {CERTIFICATE_BOILERPLATE.title}
@@ -138,6 +185,23 @@ export default function HomePage() {
             </p>
             <p className="mt-3 max-w-2xl text-muted">
               {CERTIFICATE_BOILERPLATE.mayFileOrRetain}
+            </p>
+          </div>
+        </section>
+
+        <section id="contact" className="border-t border-border bg-card py-16">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="font-serif text-2xl font-semibold text-ink">
+              Contact
+            </h2>
+            <p className="mt-3 text-muted">
+              Support and launch inquiries:{" "}
+              <a
+                className="font-medium text-accent underline"
+                href={`mailto:${SUPPORT_EMAIL}`}
+              >
+                {SUPPORT_EMAIL}
+              </a>
             </p>
           </div>
         </section>
@@ -152,6 +216,9 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex flex-col gap-2">
+            <Link href="/#pricing" className="hover:text-white">
+              Pricing
+            </Link>
             <Link href="/terms" className="hover:text-white">
               Terms of Service
             </Link>
@@ -161,6 +228,9 @@ export default function HomePage() {
             <Link href="/disclaimer" className="hover:text-white">
               Disclaimer
             </Link>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-white">
+              {SUPPORT_EMAIL}
+            </a>
           </div>
         </div>
         <div className="mx-auto mt-8 max-w-5xl border-t border-white/10 pt-6 text-white/50">

@@ -11,7 +11,7 @@ type MeUser = {
 };
 
 function dashboardPath(user: MeUser) {
-  if (user.role === "ADMIN") return "/admin/students";
+  if (user.role === "ADMIN") return "/admin";
   if (user.role === "STUDENT") {
     if (user.studentStatus === "APPROVED") return "/dashboard";
     return "/onboarding/student";

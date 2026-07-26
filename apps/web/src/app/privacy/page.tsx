@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SUPPORT_EMAIL } from "@2dcite/shared";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 
 export const metadata: Metadata = {
@@ -11,17 +12,96 @@ export default function PrivacyPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <article className="mx-auto max-w-2xl px-6 py-16">
-        <h1 className="font-serif text-3xl font-semibold text-ink">
+        <p className="text-xs text-muted">Draft for counsel review</p>
+        <h1 className="mt-2 font-serif text-3xl font-semibold text-ink">
           Privacy Policy
         </h1>
-        <p className="mt-6 text-muted">
-          Placeholder for counsel-reviewed Privacy Policy. Will address document
-          confidentiality, retention, subprocessors (Stripe, storage, email),
-          and user rights.
+        <p className="mt-6 leading-relaxed text-muted">
+          This Privacy Policy describes how 2dcite (“we”) collects, uses, and
+          shares information when you use 2dcite.com and related applications.
+          This draft should be reviewed by counsel before public launch.
         </p>
-        <p className="mt-4 text-sm text-muted">
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          Information we collect
+        </h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-muted">
+          <li>
+            Account data: name, email, role (attorney, judge, student, admin),
+            password hash
+          </li>
+          <li>
+            Student eligibility materials: law school, year, professor contact,
+            uploaded proof documents
+          </li>
+          <li>
+            Job materials: PDF briefs/orders, titles, instructions, review
+            findings, certificates
+          </li>
+          <li>
+            Payment data processed by Stripe (we do not store full card numbers)
+          </li>
+          <li>Technical logs: IP, device, audit events for security and ops</li>
+        </ul>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          How we use information
+        </h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-muted">
+          <li>Provide citation-review marketplace services</li>
+          <li>Verify student eligibility and match jobs</li>
+          <li>Process payments, hold funds, and release student shares</li>
+          <li>Generate Certificates of Citation Review</li>
+          <li>Secure the Platform, prevent fraud, and comply with law</li>
+          <li>Communicate about jobs, accounts, and service updates</li>
+        </ul>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          Sharing
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted">
+          Job documents and findings are shared with the assigned student (and
+          reverse) as needed to perform the review. We use processors such as
+          hosting providers, email delivery, object storage, and Stripe for
+          payments. We do not sell personal information.
+        </p>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          Retention
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted">
+          We retain account, job, payment, certificate, and audit records for as
+          long as needed to operate the service, resolve disputes, and meet legal
+          obligations. You may request deletion subject to legal holds and
+          legitimate business needs.
+        </p>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          Security
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted">
+          We use industry-standard measures including encrypted transport (TLS),
+          access controls, and hashed passwords. No method of transmission or
+          storage is 100% secure.
+        </p>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          Contact
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted">
+          Privacy requests:{" "}
+          <a className="text-accent underline" href={`mailto:${SUPPORT_EMAIL}`}>
+            {SUPPORT_EMAIL}
+          </a>
+        </p>
+
+        <p className="mt-10 text-sm text-muted">
           <Link href="/" className="text-accent underline">
             Back home
+          </Link>
+          {" · "}
+          <Link href="/terms" className="text-accent underline">
+            Terms
           </Link>
         </p>
       </article>

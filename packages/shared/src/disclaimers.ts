@@ -73,3 +73,7 @@ export const FUNDS_HOLD_COPY = {
   heldStatus:
     "Funds held by 2dcite pending certificate issuance.",
 } as const;
+
+/** Support contact (override via env in production UI if needed) */
+export const SUPPORT_EMAIL = "support@2dcite.com";
+export const SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}`;

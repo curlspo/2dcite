@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default async function LoginPage() {
   const user = await getSessionUserFromCookies();
   if (user) {
-    if (user.role === "ADMIN") redirect("/admin/students");
+    if (user.role === "ADMIN") redirect("/admin");
     if (user.role === "STUDENT" && user.studentProfile?.status !== "APPROVED") {
       redirect("/onboarding/student");
     }

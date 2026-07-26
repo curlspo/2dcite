@@ -8,7 +8,7 @@ import { FUNDS_HOLD_COPY } from "@2dcite/shared";
 export default async function DashboardPage() {
   const user = await getSessionUserFromCookies();
   if (!user) redirect("/login");
-  if (user.role === "ADMIN") redirect("/admin/students");
+  if (user.role === "ADMIN") redirect("/admin");
 
   const gate = studentGateMessage(user);
 

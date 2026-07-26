@@ -13,8 +13,11 @@ export function AppShell({
   const nav =
     user.role === "ADMIN"
       ? [
+          { href: "/admin", label: "Overview" },
           { href: "/admin/students", label: "Students" },
-          { href: "/jobs", label: "Jobs" },
+          { href: "/admin/jobs", label: "Jobs" },
+          { href: "/admin/payouts", label: "Payouts" },
+          { href: "/admin/audit", label: "Audit" },
         ]
       : user.role === "STUDENT"
         ? [

@@ -82,12 +82,16 @@ Change before any real deployment.
 | **2** | Jobs, PDF upload, Stripe/dev pay, **payment hold** | Done |
 | **3** | Matching, accept/decline, student review | Done |
 | **4** | Certificate PDF + **fund release** | Done |
-| **5** | 2dcite.com launch polish | |
+| **5** | Launch polish, legal drafts, admin ops, checklist | Done |
 | **6** | TestFlight / App Store | |
 
 ## Liability copy
 
 Import from `@2dcite/shared` only (`disclaimers.ts`). Do not hardcode divergent legal strings in UI.
+
+## Launch
+
+See [`docs/LAUNCH.md`](./docs/LAUNCH.md) for the soft-launch checklist (DNS, Stripe live keys, counsel review, Postgres, domain).
 
 ## License
 
