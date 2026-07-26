@@ -2,7 +2,15 @@ import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_APP_URL || "https://2dcite.com";
-  const paths = ["", "/terms", "/privacy", "/disclaimer", "/login", "/signup"];
+  const paths = [
+    "",
+    "/terms",
+    "/privacy",
+    "/disclaimer",
+    "/accessibility",
+    "/login",
+    "/signup",
+  ];
   return paths.map((p) => ({
     url: `${base}${p || "/"}`,
     lastModified: new Date(),

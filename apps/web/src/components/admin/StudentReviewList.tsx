@@ -78,13 +78,18 @@ export function StudentReviewList({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 text-sm">
+      <div
+        className="flex flex-wrap gap-2 text-sm"
+        role="group"
+        aria-label="Filter students by status"
+      >
         {["PENDING", "APPROVED", "REJECTED", "ALL"].map((f) => (
           <button
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`rounded-md px-3 py-1.5 ${
+            aria-pressed={filter === f}
+            className={`min-h-11 rounded-md px-3 py-2 ${
               filter === f
                 ? "bg-accent text-white"
                 : "border border-border bg-card text-muted"
@@ -95,7 +100,12 @@ export function StudentReviewList({
         ))}
       </div>
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger">{error}</p>
+        <div
+          role="alert"
+          className="rounded-md border border-danger/30 bg-red-50 px-3 py-2 text-sm text-danger"
+        >
+          {error}
+        </div>
       )}
       {visible.length === 0 ? (
         <p className="text-sm text-muted">No students in this filter.</p>
@@ -133,18 +143,19 @@ export function StudentReviewList({
                     <button
                       type="button"
                       disabled={busyId === s.id}
+                      aria-busy={busyId === s.id}
                       onClick={() => approve(s.id)}
-                      className="rounded-md bg-accent px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                      className="min-h-11 rounded-md bg-accent px-3 py-2 text-sm text-white disabled:opacity-50"
                     >
-                      Approve
+                      Approve {s.name}
                     </button>
                     <button
                       type="button"
                       disabled={busyId === s.id}
                       onClick={() => reject(s.id)}
-                      className="rounded-md border border-border px-3 py-1.5 text-sm text-ink disabled:opacity-50"
+                      className="min-h-11 rounded-md border border-border px-3 py-2 text-sm text-ink disabled:opacity-50"
                     >
-                      Reject
+                      Reject {s.name}
                     </button>
                   </div>
                 )}

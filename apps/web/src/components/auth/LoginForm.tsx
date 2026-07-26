@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, BrowserApiError } from "@/lib/api-browser";
 
@@ -21,6 +21,7 @@ function dashboardPath(user: MeUser) {
 
 export function LoginForm() {
   const router = useRouter();
+  const errorId = useId();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,36 +48,58 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 space-y-4 rounded-lg border border-border bg-card p-6">
+    <form
+      onSubmit={onSubmit}
+      className="mt-8 space-y-4 rounded-lg border border-border bg-card p-6"
+      noValidate={false}
+      aria-describedby={error ? errorId : undefined}
+    >
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger">{error}</p>
+        <div
+          id={errorId}
+          role="alert"
+          className="rounded-md border border-danger/30 bg-red-50 px-3 py-2 text-sm text-danger"
+        >
+          {error}
+        </div>
       )}
-      <label className="block text-sm">
-        <span className="text-muted">Email</span>
+      <div className="block text-sm">
+        <label htmlFor="login-email" className="font-medium text-ink">
+          Email
+        </label>
         <input
+          id="login-email"
           type="email"
+          name="email"
           required
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-ink"
+          aria-invalid={error ? true : undefined}
+          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 text-ink"
         />
-      </label>
-      <label className="block text-sm">
-        <span className="text-muted">Password</span>
+      </div>
+      <div className="block text-sm">
+        <label htmlFor="login-password" className="font-medium text-ink">
+          Password
+        </label>
         <input
+          id="login-password"
           type="password"
+          name="password"
           required
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-ink"
+          aria-invalid={error ? true : undefined}
+          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 text-ink"
         />
-      </label>
+      </div>
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+        aria-busy={loading}
+        className="min-h-11 w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? "Signing in…" : "Sign in"}
       </button>

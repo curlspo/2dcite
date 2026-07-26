@@ -16,7 +16,8 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <article className="mx-auto max-w-2xl px-6 py-16 prose-sm">
+      <main id="main-content" tabIndex={-1}>
+      <article className="prose-a11y mx-auto max-w-2xl px-6 py-16 prose-sm">
         <p className="text-xs text-muted">
           Draft for counsel review · Disclaimer copy {DISCLAIMER_COPY_VERSION}
         </p>
@@ -148,19 +149,24 @@ export default function TermsPage() {
         </p>
 
         <p className="mt-10 text-sm text-muted">
-          <Link href="/" className="text-accent underline">
+          <Link href="/" className="content-link">
             Back home
           </Link>
           {" · "}
-          <Link href="/privacy" className="text-accent underline">
+          <Link href="/privacy" className="content-link">
             Privacy
           </Link>
           {" · "}
-          <Link href="/disclaimer" className="text-accent underline">
+          <Link href="/disclaimer" className="content-link">
             Disclaimer
+          </Link>
+          {" · "}
+          <Link href="/accessibility" className="content-link">
+            Accessibility
           </Link>
         </p>
       </article>
+      </main>
     </div>
   );
 }

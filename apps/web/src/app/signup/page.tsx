@@ -23,7 +23,7 @@ export default async function SignupPage({
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <div className="mx-auto max-w-md px-6 py-16">
+      <main id="main-content" className="mx-auto max-w-md px-6 py-16" tabIndex={-1}>
         <h1 className="font-serif text-2xl font-semibold text-ink">
           Create an account
         </h1>
@@ -35,11 +35,11 @@ export default async function SignupPage({
         <SignupForm initialRole={initialRole} />
         <p className="mt-6 text-sm text-muted">
           Already have an account?{" "}
-          <Link href="/login" className="text-accent underline">
+          <Link href="/login" className="content-link font-medium">
             Sign in
           </Link>
         </p>
-      </div>
+      </main>
     </div>
   );
 }

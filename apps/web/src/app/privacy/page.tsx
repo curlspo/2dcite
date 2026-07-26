@@ -11,7 +11,8 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <article className="mx-auto max-w-2xl px-6 py-16">
+      <main id="main-content" tabIndex={-1}>
+      <article className="prose-a11y mx-auto max-w-2xl px-6 py-16">
         <p className="text-xs text-muted">Draft for counsel review</p>
         <h1 className="mt-2 font-serif text-3xl font-semibold text-ink">
           Privacy Policy
@@ -96,15 +97,20 @@ export default function PrivacyPage() {
         </p>
 
         <p className="mt-10 text-sm text-muted">
-          <Link href="/" className="text-accent underline">
+          <Link href="/" className="content-link">
             Back home
           </Link>
           {" · "}
-          <Link href="/terms" className="text-accent underline">
+          <Link href="/terms" className="content-link">
             Terms
+          </Link>
+          {" · "}
+          <Link href="/accessibility" className="content-link">
+            Accessibility
           </Link>
         </p>
       </article>
+      </main>
     </div>
   );
 }

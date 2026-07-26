@@ -25,12 +25,15 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="flex-1">
-        <section className="mx-auto max-w-5xl px-6 pb-16 pt-20">
+      <main id="main-content" className="flex-1" tabIndex={-1}>
+        <section className="mx-auto max-w-5xl px-6 pb-16 pt-20" aria-labelledby="hero-heading">
           <p className="mb-3 text-sm font-medium uppercase tracking-widest text-gold">
             Human-in-the-loop citation review
           </p>
-          <h1 className="font-serif text-4xl font-semibold leading-tight text-ink md:text-5xl">
+          <h1
+            id="hero-heading"
+            className="font-serif text-4xl font-semibold leading-tight text-ink md:text-5xl"
+          >
             Independent citation verification
             <br />
             for briefs and court orders
@@ -47,19 +50,19 @@ export default function HomePage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/signup"
-              className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white hover:opacity-90"
+              className="inline-flex min-h-11 items-center rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white hover:opacity-90"
             >
               Get started
             </Link>
             <Link
               href="/signup?role=student"
-              className="rounded-md border border-border bg-card px-5 py-2.5 text-sm font-medium text-ink hover:bg-accent-soft"
+              className="inline-flex min-h-11 items-center rounded-md border border-border bg-card px-5 py-2.5 text-sm font-medium text-ink hover:bg-accent-soft"
             >
               Apply as a student
             </Link>
             <Link
               href="/login"
-              className="rounded-md px-5 py-2.5 text-sm font-medium text-muted hover:text-ink"
+              className="inline-flex min-h-11 items-center rounded-md px-5 py-2.5 text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline"
             >
               Sign in
             </Link>
@@ -74,9 +77,13 @@ export default function HomePage() {
         <section
           id="how-it-works"
           className="border-y border-border bg-card py-16"
+          aria-labelledby="how-heading"
         >
           <div className="mx-auto max-w-5xl px-6">
-            <h2 className="font-serif text-2xl font-semibold text-ink">
+            <h2
+              id="how-heading"
+              className="font-serif text-2xl font-semibold text-ink"
+            >
               How it works
             </h2>
             <ol className="mt-8 grid gap-6 md:grid-cols-4">
@@ -123,9 +130,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="pricing" className="py-16">
+        <section id="pricing" className="py-16" aria-labelledby="pricing-heading">
           <div className="mx-auto max-w-5xl px-6">
-            <h2 className="font-serif text-2xl font-semibold text-ink">
+            <h2
+              id="pricing-heading"
+              className="font-serif text-2xl font-semibold text-ink"
+            >
               Simple fixed pricing
             </h2>
             <p className="mt-2 max-w-2xl text-muted">
@@ -207,33 +217,42 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className="border-t border-border bg-ink px-6 py-10 text-sm text-white/70">
+      <footer
+        className="border-t border-border bg-ink px-6 py-10 text-sm text-white/80"
+        role="contentinfo"
+      >
         <div className="mx-auto flex max-w-5xl flex-col gap-6 md:flex-row md:justify-between">
           <div>
             <p className="font-serif text-lg text-white">2dcite</p>
-            <p className="mt-2 max-w-md text-white/60">
+            <p className="mt-2 max-w-md text-white/75">
               Independent citation verification for the bar and the bench.
             </p>
           </div>
-          <div className="flex flex-col gap-2">
-            <Link href="/#pricing" className="hover:text-white">
+          <nav aria-label="Footer" className="flex flex-col gap-2">
+            <Link href="/#pricing" className="underline-offset-2 hover:text-white hover:underline">
               Pricing
             </Link>
-            <Link href="/terms" className="hover:text-white">
+            <Link href="/terms" className="underline-offset-2 hover:text-white hover:underline">
               Terms of Service
             </Link>
-            <Link href="/privacy" className="hover:text-white">
+            <Link href="/privacy" className="underline-offset-2 hover:text-white hover:underline">
               Privacy Policy
             </Link>
-            <Link href="/disclaimer" className="hover:text-white">
+            <Link href="/disclaimer" className="underline-offset-2 hover:text-white hover:underline">
               Disclaimer
             </Link>
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-white">
+            <Link href="/accessibility" className="underline-offset-2 hover:text-white hover:underline">
+              Accessibility
+            </Link>
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="underline-offset-2 hover:text-white hover:underline"
+            >
               {SUPPORT_EMAIL}
             </a>
-          </div>
+          </nav>
         </div>
-        <div className="mx-auto mt-8 max-w-5xl border-t border-white/10 pt-6 text-white/50">
+        <div className="mx-auto mt-8 max-w-5xl border-t border-white/20 pt-6 text-white/70">
           <LiabilityFooter />
         </div>
       </footer>

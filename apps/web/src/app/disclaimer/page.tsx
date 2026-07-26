@@ -16,7 +16,8 @@ export default function DisclaimerPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <article className="mx-auto max-w-2xl px-6 py-16">
+      <main id="main-content" tabIndex={-1}>
+      <article className="prose-a11y mx-auto max-w-2xl px-6 py-16">
         <p className="text-xs text-muted">
           Copy version {DISCLAIMER_COPY_VERSION}
         </p>
@@ -40,11 +41,16 @@ export default function DisclaimerPage() {
         <p className="mt-10 text-sm text-muted">
           This page is product positioning language. Final Terms should be
           reviewed by counsel before public launch.{" "}
-          <Link href="/" className="text-accent underline">
+          <Link href="/" className="content-link">
             Back home
+          </Link>
+          {" · "}
+          <Link href="/accessibility" className="content-link">
+            Accessibility
           </Link>
         </p>
       </article>
+      </main>
     </div>
   );
 }

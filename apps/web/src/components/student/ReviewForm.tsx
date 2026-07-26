@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CitationFindingCode,
@@ -27,6 +27,7 @@ const CODES = [
 
 export function ReviewForm({ jobId }: { jobId: string }) {
   const router = useRouter();
+  const errorId = useId();
   const [findings, setFindings] = useState<Finding[]>([
     { citationText: "", code: CitationFindingCode.ACCURATE, notes: "" },
   ]);
@@ -83,14 +84,27 @@ export function ReviewForm({ jobId }: { jobId: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 space-y-6">
+    <form
+      onSubmit={onSubmit}
+      className="mt-6 space-y-6"
+      aria-describedby={error ? errorId : undefined}
+    >
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger">{error}</p>
+        <div
+          id={errorId}
+          role="alert"
+          className="rounded-md border border-danger/30 bg-red-50 px-3 py-2 text-sm text-danger"
+        >
+          {error}
+        </div>
       )}
       {message && (
-        <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-900">
+        <div
+          role="status"
+          className="rounded-md border border-green-700/20 bg-green-50 px-3 py-2 text-sm text-green-900"
+        >
           {message}
-        </p>
+        </div>
       )}
 
       <div>
@@ -196,7 +210,8 @@ export function ReviewForm({ jobId }: { jobId: string }) {
       <button
         type="submit"
         disabled={loading || !attested}
-        className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+        aria-busy={loading}
+        className="min-h-11 rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? "Submitting…" : "Submit review"}
       </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CLIENT_SUBMIT_ACKNOWLEDGMENTS,
@@ -20,6 +20,7 @@ function formatUsd(cents: number) {
 
 export function NewJobForm() {
   const router = useRouter();
+  const errorId = useId();
   const [title, setTitle] = useState("");
   const [instructions, setInstructions] = useState("");
   const [tier, setTier] = useState<"STANDARD_48H" | "RUSH">("STANDARD_48H");
@@ -96,35 +97,51 @@ export function NewJobForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 max-w-xl space-y-5">
+    <form
+      onSubmit={onSubmit}
+      className="mt-6 max-w-xl space-y-5"
+      aria-describedby={error ? errorId : undefined}
+    >
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger">{error}</p>
+        <div
+          id={errorId}
+          role="alert"
+          className="rounded-md border border-danger/30 bg-red-50 px-3 py-2 text-sm text-danger"
+        >
+          {error}
+        </div>
       )}
 
-      <label className="block text-sm">
-        <span className="text-muted">Document title</span>
+      <div className="block text-sm">
+        <label htmlFor="job-title" className="font-medium text-ink">
+          Document title
+        </label>
         <input
+          id="job-title"
           required
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Plaintiff Motion for Summary Judgment"
-          className="mt-1 w-full rounded-md border border-border bg-card px-3 py-2"
+          className="mt-1 w-full rounded-md border border-border bg-card px-3 py-2.5"
         />
-      </label>
+      </div>
 
-      <label className="block text-sm">
-        <span className="text-muted">Instructions for the reviewer (optional)</span>
+      <div className="block text-sm">
+        <label htmlFor="job-instructions" className="font-medium text-ink">
+          Instructions for the reviewer (optional)
+        </label>
         <textarea
+          id="job-instructions"
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
           rows={3}
-          className="mt-1 w-full rounded-md border border-border bg-card px-3 py-2"
+          className="mt-1 w-full rounded-md border border-border bg-card px-3 py-2.5"
           placeholder="Focus areas, known issues, etc. Not legal advice from the platform."
         />
-      </label>
+      </div>
 
       <fieldset className="space-y-2">
-        <legend className="text-sm text-muted">Turnaround</legend>
+        <legend className="text-sm font-medium text-ink">Turnaround</legend>
         <label
           className={`flex cursor-pointer justify-between rounded-md border p-3 ${
             tier === "STANDARD_48H" ? "border-accent bg-accent-soft" : "border-border bg-card"
@@ -173,29 +190,34 @@ export function NewJobForm() {
         </label>
       </fieldset>
 
-      <label className="block text-sm">
-        <span className="text-muted">PDF document (max ~{PRICING_DEFAULTS.maxPages} pages recommended)</span>
+      <div className="block text-sm">
+        <label htmlFor="job-pdf" className="font-medium text-ink">
+          PDF document (max ~{PRICING_DEFAULTS.maxPages} pages recommended)
+        </label>
         <input
+          id="job-pdf"
           type="file"
           accept="application/pdf,.pdf"
           required
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="mt-1 block w-full text-sm"
         />
-      </label>
+      </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
-        <p className="text-sm font-medium text-ink">Liability acknowledgments</p>
+      <fieldset className="rounded-lg border border-border bg-card p-4">
+        <legend className="px-1 text-sm font-medium text-ink">
+          Liability acknowledgments
+        </legend>
         <p className="mt-1 text-xs text-muted">
           Required before payment. Copy version {DISCLAIMER_COPY_VERSION}
         </p>
         <ul className="mt-3 space-y-3">
           {CLIENT_SUBMIT_ACKNOWLEDGMENTS.map((a) => (
             <li key={a.id}>
-              <label className="flex gap-2 text-sm text-muted">
+              <label className="flex min-h-11 gap-2 text-sm text-muted">
                 <input
                   type="checkbox"
-                  className="mt-1"
+                  className="mt-1 h-4 w-4 shrink-0"
                   checked={Boolean(acks[a.id])}
                   onChange={(e) =>
                     setAcks((prev) => ({ ...prev, [a.id]: e.target.checked }))
@@ -206,7 +228,7 @@ export function NewJobForm() {
             </li>
           ))}
         </ul>
-      </div>
+      </fieldset>
 
       <div className="rounded-lg border border-gold/30 bg-accent-soft/40 p-4 text-sm text-muted">
         <p className="font-medium text-ink">Payment & hold</p>
@@ -225,7 +247,8 @@ export function NewJobForm() {
       <button
         type="submit"
         disabled={loading || !allAcked}
-        className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+        aria-busy={loading}
+        className="min-h-11 rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? "Processing…" : `Pay ${formatUsd(fees.grossCents)} & submit`}
       </button>

@@ -22,7 +22,7 @@ export default async function LoginPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <div className="mx-auto max-w-md px-6 py-16">
+      <main id="main-content" className="mx-auto max-w-md px-6 py-16" tabIndex={-1}>
         <h1 className="font-serif text-2xl font-semibold text-ink">Sign in</h1>
         <p className="mt-3 text-sm text-muted">
           Same account works on the web and the iOS app.
@@ -30,11 +30,11 @@ export default async function LoginPage() {
         <LoginForm />
         <p className="mt-4 text-sm text-muted">
           No account?{" "}
-          <Link href="/signup" className="text-accent underline">
+          <Link href="/signup" className="content-link font-medium">
             Sign up
           </Link>
         </p>
-      </div>
+      </main>
     </div>
   );
 }
