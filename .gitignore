@@ -45,3 +45,5 @@ packages/db/dev.db-journal
 apps/web/.env.local
 packages/db/.env
 
+.vercel
+.env*
