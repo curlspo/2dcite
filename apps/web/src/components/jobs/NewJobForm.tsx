@@ -198,8 +198,17 @@ export function NewJobForm() {
           You may upload a full brief or order, or limit the submission to a{" "}
           <strong className="font-medium text-ink">table of authorities</strong>{" "}
           (or similar citation list) to confirm existence and form of cases.
-          2dcite takes no responsibility for confidential materials you choose
-          to upload.
+          Materials may be submitted{" "}
+          <strong className="font-medium text-ink">
+            before or after filing
+          </strong>
+          , and{" "}
+          <strong className="font-medium text-ink">
+            before or after an order is issued
+          </strong>
+          —which can create an opportunity to correct a filing or withdraw an
+          order under applicable rules (actions only you take). 2dcite takes no
+          responsibility for confidential materials you choose to upload.
         </p>
         <input
           id="job-pdf"

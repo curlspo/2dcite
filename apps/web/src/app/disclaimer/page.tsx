@@ -6,6 +6,7 @@ import {
   CERTIFICATE_BOILERPLATE,
   CONFIDENTIALITY_CORE,
   FUNDS_HOLD_COPY,
+  POST_FILING_CORE,
 } from "@2dcite/shared";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 
@@ -44,6 +45,14 @@ export default function DisclaimerPage() {
               Limited submissions (table of authorities)
             </h2>
             <p>{CONFIDENTIALITY_CORE.limitedSubmissionToa}</p>
+
+            <h2 className="pt-4 font-serif text-xl font-semibold text-ink">
+              Post-filing and post-issuance review
+            </h2>
+            <p>{POST_FILING_CORE.postFilingAndPostIssuanceOk}</p>
+            <p>{POST_FILING_CORE.opportunityToCorrectOrWithdraw}</p>
+            <p>{POST_FILING_CORE.sensitiveMatters}</p>
+            <p>{POST_FILING_CORE.noDutyToCorrect}</p>
 
             <h2 className="pt-4 font-serif text-xl font-semibold text-ink">
               Student confidentiality and non-disclosure

@@ -22,6 +22,13 @@ Canonical product rules for engineering. UI, certificates, and Terms must not co
 4. **Students may not disclose failed / hallucinated citations** (including that a particular lawyer or judge used non-existent authorities) **without prior written authorization** from the submitting party.
 5. Findings are delivered **only to the submitting party through the platform**.
 
+## Post-filing / post-issuance
+
+1. Clients may upload documents **after filing** or **after an order is issued** (as well as before).
+2. Post-filing / post-issuance review may inform the client’s independent decision to **correct a filing** or **withdraw / amend an order**.
+3. This can reduce risk for **particularly sensitive** matters (with TOA-only and confidentiality options).
+4. **2dcite does not** file, correct, withdraw, or amend anything; those decisions remain solely with the licensed attorney or judge.
+
 Implementation: `packages/shared/src/disclaimers.ts` (`DISCLAIMER_COPY_VERSION`). Bump version when acknowledgment text changes.
 
 ## Student eligibility (strict)

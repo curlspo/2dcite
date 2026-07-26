@@ -161,6 +161,11 @@ export async function renderCertificatePdf(
     color: muted,
     gap: 6,
   });
+  draw(CERTIFICATE_BOILERPLATE.postFilingNote, {
+    size: 9,
+    color: muted,
+    gap: 6,
+  });
   draw(CERTIFICATE_BOILERPLATE.mayFileOrRetain, {
     size: 9,
     color: muted,

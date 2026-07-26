@@ -4,6 +4,7 @@ import {
   CONFIDENTIALITY_CORE,
   FUNDS_HOLD_COPY,
   LIABILITY_CORE,
+  POST_FILING_CORE,
   PRICING_DEFAULTS,
   SUPPORT_EMAIL,
   computeFeeBreakdown,
@@ -76,6 +77,12 @@ export default function HomePage() {
               {CONFIDENTIALITY_CORE.noResponsibilityForConfidential}
             </p>
             <p className="mt-2">{CONFIDENTIALITY_CORE.limitedSubmissionToa}</p>
+            <p className="mt-2">
+              {POST_FILING_CORE.postFilingAndPostIssuanceOk}
+            </p>
+            <p className="mt-2">
+              {POST_FILING_CORE.opportunityToCorrectOrWithdraw}
+            </p>
           </div>
         </section>
 
@@ -96,7 +103,7 @@ export default function HomePage() {
                 {
                   step: "1",
                   title: "Upload & pay",
-                  body: "Upload a PDF brief/order—or only a table of authorities—choose Standard or Rush, accept liability and confidentiality acknowledgments, and pay. Funds are held by 2dcite.",
+                  body: "Upload before or after filing—or after an order is issued—using a full PDF or only a table of authorities. Choose Standard or Rush, accept acknowledgments, and pay. Funds are held by 2dcite.",
                 },
                 {
                   step: "2",
@@ -106,12 +113,12 @@ export default function HomePage() {
                 {
                   step: "3",
                   title: "Independent review",
-                  body: "Student verifies citations (including existence of authorities) and reports findings only to you through the platform—not to third parties.",
+                  body: "Student verifies citations and reports findings only to you. Post-filing or post-issuance review can inform your decision to correct a filing or withdraw an order under applicable rules.",
                 },
                 {
                   step: "4",
                   title: "Certificate & release",
-                  body: "System auto-generates the Certificate of Citation Review. Student share is released from hold; platform retains its fee.",
+                  body: "System auto-generates the Certificate of Citation Review. Student share is released from hold; platform retains its fee. You alone decide any correction or withdrawal.",
                 },
               ].map((item) => (
                 <li

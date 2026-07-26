@@ -5,6 +5,7 @@ import {
   DISCLAIMER_COPY_VERSION,
   FUNDS_HOLD_COPY,
   LIABILITY_CORE,
+  POST_FILING_CORE,
   SUPPORT_EMAIL,
 } from "@2dcite/shared";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
@@ -132,7 +133,23 @@ export default function TermsPage() {
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          7. Student confidentiality and non-disclosure of failed citations
+          7. Post-filing and post-issuance review; correction or withdrawal
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted">
+          {POST_FILING_CORE.postFilingAndPostIssuanceOk}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {POST_FILING_CORE.opportunityToCorrectOrWithdraw}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {POST_FILING_CORE.sensitiveMatters}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {POST_FILING_CORE.noDutyToCorrect}
+        </p>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          8. Student confidentiality and non-disclosure of failed citations
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           {CONFIDENTIALITY_CORE.studentConfidentiality}
@@ -153,7 +170,7 @@ export default function TermsPage() {
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          8. Acceptable use
+          9. Acceptable use
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           You may not use the Platform for unlawful purposes, to harass others,
@@ -164,7 +181,7 @@ export default function TermsPage() {
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          9. Limitation of liability
+          10. Limitation of liability
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           To the fullest extent permitted by law, 2dcite and its operators are
@@ -177,7 +194,7 @@ export default function TermsPage() {
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          10. Contact
+          11. Contact
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           Questions:{" "}

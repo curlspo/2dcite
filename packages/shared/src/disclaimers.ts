@@ -7,7 +7,7 @@
  * Stored LiabilityAcknowledgment rows reference this version.
  */
 
-export const DISCLAIMER_COPY_VERSION = "2026-07-26.2";
+export const DISCLAIMER_COPY_VERSION = "2026-07-26.3";
 
 export const LIABILITY_CORE = {
   ultimateLiability:
@@ -40,9 +40,25 @@ export const CONFIDENTIALITY_CORE = {
     "By uploading materials, you acknowledge that transmission and storage involve residual risk, and that 2dcite’s security measures do not create liability for unauthorized access, disclosure, or loss of confidential information beyond what applicable law non-waivably requires.",
 } as const;
 
+/**
+ * Timing of review relative to filing / issuance.
+ * Positions 2dcite as usable after filing or after an order is issued,
+ * including for correction or withdrawal of particularly sensitive matters.
+ */
+export const POST_FILING_CORE = {
+  postFilingAndPostIssuanceOk:
+    "Documents may be uploaded for citation review after a brief or other paper has been filed, and after a court order has been issued. Pre-filing and pre-issuance review is also available; you choose the timing that fits your professional judgment and local rules.",
+  opportunityToCorrectOrWithdraw:
+    "Post-filing and post-issuance review can provide an opportunity to identify citation problems and, where appropriate under applicable rules and professional obligations, to seek to correct a filing, file a notice of errata or supplemental authority, move for relief, or withdraw or amend an order—actions solely determined and executed by the licensed attorney or judge, not by 2dcite or student reviewers.",
+  sensitiveMatters:
+    "Using the platform after filing or issuance can reduce exposure for particularly sensitive filings and orders by allowing independent verification of authorities while limiting what must be shared before a public filing or entry of an order (for example, by submitting a table of authorities only, or by reviewing after the fact under confidentiality protections).",
+  noDutyToCorrect:
+    "2dcite does not file, correct, withdraw, or amend any paper or order on your behalf, does not advise whether correction or withdrawal is required or available, and does not guarantee that any court will permit correction or withdrawal. Those decisions and actions remain solely yours.",
+} as const;
+
 /** Short footer used across app shells */
 export const LIABILITY_FOOTER =
-  "Citation review on 2dcite is an independent verification layer only. Ultimate liability remains with the licensed attorney or judge. Checking citations is a non-delegable duty. 2dcite takes no responsibility for confidential materials you upload. Students are bound by confidentiality and may not disclose failed or hallucinated citations without written authorization from the submitting party.";
+  "Citation review on 2dcite is an independent verification layer only. Ultimate liability remains with the licensed attorney or judge. Checking citations is a non-delegable duty. Documents may be reviewed after filing or after an order is issued, which may allow opportunity to correct a filing or withdraw an order. 2dcite takes no responsibility for confidential materials you upload. Students are bound by confidentiality and may not disclose failed or hallucinated citations without written authorization from the submitting party.";
 
 /** Required checkboxes before client pays / submits a job */
 export const CLIENT_SUBMIT_ACKNOWLEDGMENTS = [
@@ -74,6 +90,10 @@ export const CLIENT_SUBMIT_ACKNOWLEDGMENTS = [
     id: "student_confidentiality_understood",
     text: `${CONFIDENTIALITY_CORE.studentConfidentiality} ${CONFIDENTIALITY_CORE.noDisclosureOfFailedCitations}`,
   },
+  {
+    id: "post_filing_post_issuance",
+    text: `${POST_FILING_CORE.postFilingAndPostIssuanceOk} ${POST_FILING_CORE.opportunityToCorrectOrWithdraw} ${POST_FILING_CORE.noDutyToCorrect}`,
+  },
 ] as const;
 
 /**
@@ -98,6 +118,8 @@ export const CERTIFICATE_BOILERPLATE = {
     "Submitted materials may be confidential. 2dcite takes no responsibility for confidential documents uploaded by the submitting party. Student reviewers are bound by confidentiality and, without written authorization from the submitting party, may not disclose failed verifications or alleged use of fabricated or hallucinated authorities.",
   limitedSubmissionNote:
     "Reviews may be based on a full document or a limited submission such as a table of authorities, as provided by the submitting party, for verification of the existence and form of cited authorities.",
+  postFilingNote:
+    "Materials may be submitted before or after filing, and before or after issuance of an order. Post-filing or post-issuance review may inform the submitting party’s independent decision whether to seek correction of a filing or withdrawal or amendment of an order under applicable rules. 2dcite does not itself correct, withdraw, or amend any filing or order.",
   mayFileOrRetain:
     "This certificate may be filed with the underlying document or retained by the attorney or judge as evidence of risk mitigation and best efforts through independent verification.",
 } as const;
