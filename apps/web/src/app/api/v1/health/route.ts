@@ -21,16 +21,9 @@ export async function GET() {
     dbError = e instanceof Error ? e.message : String(e);
   }
 
-  const body: HealthResponse & {
-    env: string;
-    storage: string;
-    stripe: boolean;
-    db: string;
-    dbError?: string;
-    hasDatabaseUrl: boolean;
-  } = {
-    ok: db !== "error",
-    service: "2dcite-api",
+  const body = {
+    ok: true as const,
+    service: "2dcite-api" as const,
     version: "0.1.0",
     time: new Date().toISOString(),
     env: process.env.VERCEL_ENV || process.env.NODE_ENV || "unknown",
@@ -39,7 +32,7 @@ export async function GET() {
     db,
     hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
     ...(dbError ? { dbError: dbError.slice(0, 300) } : {}),
-  };
+  } satisfies HealthResponse & Record<string, unknown>;
 
   const status = db === "error" ? 503 : 200;
   return NextResponse.json(body, { status });
