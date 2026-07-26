@@ -4,10 +4,10 @@
  */
 
 export const PRICING_DEFAULTS = {
-  /** Base fixed fee charged to client (USD cents) */
-  baseFeeCents: 14900, // $149.00 placeholder
-  /** Rush surcharge added to base (USD cents) */
-  rushFeeCents: 7500, // $75.00 placeholder
+  /** Base fixed fee charged to client (USD cents) — Standard */
+  baseFeeCents: 7900, // $79.00
+  /** Rush surcharge added to base (USD cents) — Standard + surcharge = $119 */
+  rushFeeCents: 4000, // $40.00 surcharge → $119.00 total
   /** Platform share of total fee, basis points (e.g. 2500 = 25%) */
   platformFeeBps: 2500,
   /** Soft page cap for MVP single tier */
