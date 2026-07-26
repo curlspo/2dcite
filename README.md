@@ -79,7 +79,7 @@ Change before any real deployment.
 |-------|--------|--------|
 | **0** | Monorepo, shared domain, marketing shell, API health, mobile stub | Done |
 | **1** | Auth, student application, admin approve, eligibility gate | Done |
-| **2** | Jobs, PDF upload, Stripe, **payment hold** | Next |
+| **2** | Jobs, PDF upload, Stripe/dev pay, **payment hold** | Done |
 | **3** | Matching, student review | |
 | **4** | Certificate PDF + **fund release** | |
 | **5** | 2dcite.com launch polish | |

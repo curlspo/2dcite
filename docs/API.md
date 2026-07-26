@@ -34,14 +34,20 @@ Session tokens are random secrets stored as SHA-256 hashes. Clients may send:
 | POST | `/admin/students/:id/approve` | admin |
 | POST | `/admin/students/:id/reject` | body optional `{ reason }` |
 
-### Planned (Phase 2+)
+### Implemented (Phase 2)
 
 | Method | Path | Notes |
 |--------|------|--------|
-| GET/POST | `/jobs` | client creates job |
+| GET | `/pricing` | tiers, acks, funds-hold copy, stripeEnabled |
+| GET/POST | `/jobs` | list / create (AWAITING_PAYMENT + liability acks) |
 | GET | `/jobs/:id` | detail |
-| POST | `/jobs/:id/checkout` | Stripe; on success → hold + QUEUED |
-| POST | `/webhooks/stripe` | payment confirmation |
+| POST | `/jobs/:id/checkout` | Stripe Checkout **or** dev mock when no Stripe keys → **Payment SUCCEEDED + Payout HELD + QUEUED** |
+| POST | `/webhooks/stripe` | `checkout.session.completed` → same hold path |
+
+### Planned (Phase 3+)
+
+| Method | Path | Notes |
+|--------|------|--------|
 | POST | `/jobs/:id/accept` | student |
 | POST | `/jobs/:id/decline` | student |
 | POST | `/jobs/:id/review` | findings + attestation → **cert + fund release** |

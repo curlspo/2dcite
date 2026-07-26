@@ -105,6 +105,22 @@ export function createApiClient(options: ApiClientOptions) {
         method: "POST",
         body: JSON.stringify({ reason }),
       }),
+    pricing: () => request<Record<string, unknown>>("/pricing"),
+    listJobs: () => request<{ jobs: unknown[] }>("/jobs"),
+    getJob: (id: string) => request<{ job: unknown }>(`/jobs/${id}`),
+    createJob: (body: unknown) =>
+      request<{ job: { id: string } }>("/jobs", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    checkoutJob: (id: string, body?: { devMock?: boolean }) =>
+      request<{ mode: string; url?: string; job?: unknown }>(
+        `/jobs/${id}/checkout`,
+        {
+          method: "POST",
+          body: JSON.stringify(body ?? {}),
+        }
+      ),
   };
 }
 

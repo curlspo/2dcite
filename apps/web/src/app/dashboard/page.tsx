@@ -45,9 +45,21 @@ export default async function DashboardPage() {
 
       {(user.role === "ATTORNEY" || user.role === "JUDGE") && (
         <div className="mt-6 space-y-3 rounded-lg border border-border bg-card p-5 text-sm text-muted">
-          <p className="font-medium text-ink">Coming next (Phase 2)</p>
-          <p>Upload PDF → choose Standard 48h or Rush → pay → funds held by platform.</p>
+          <p className="font-medium text-ink">Submit a citation review</p>
+          <p>
+            Upload a PDF, choose Standard or Rush, accept liability
+            acknowledgments, and pay. {FUNDS_HOLD_COPY.clientPayOnUpload}
+          </p>
           <p>{FUNDS_HOLD_COPY.releaseOnCertificate}</p>
+          <Link
+            href="/jobs/new"
+            className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            New citation review
+          </Link>
+          <Link href="/jobs" className="ml-3 text-sm text-accent underline">
+            View jobs
+          </Link>
         </div>
       )}
     </AppShell>

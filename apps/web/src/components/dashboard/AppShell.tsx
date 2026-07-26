@@ -12,13 +12,20 @@ export function AppShell({
 }) {
   const nav =
     user.role === "ADMIN"
-      ? [{ href: "/admin/students", label: "Students" }]
+      ? [
+          { href: "/admin/students", label: "Students" },
+          { href: "/jobs", label: "Jobs" },
+        ]
       : user.role === "STUDENT"
         ? [
             { href: "/dashboard", label: "Home" },
             { href: "/onboarding/student", label: "Eligibility" },
           ]
-        : [{ href: "/dashboard", label: "Jobs" }];
+        : [
+            { href: "/dashboard", label: "Home" },
+            { href: "/jobs", label: "Jobs" },
+            { href: "/jobs/new", label: "New review" },
+          ];
 
   return (
     <div className="flex min-h-screen flex-col">
