@@ -39,3 +39,9 @@ packages/db/prisma/*.db-journal
 # uploads / certs (local)
 .tmp
 .uploads
+packages/db/dev.db
+packages/db/dev.db-journal
+.uploads
+apps/web/.env.local
+packages/db/.env
+

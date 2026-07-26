@@ -32,8 +32,12 @@ docs/             PRODUCT.md, API.md
 ```bash
 cd ~/2dcite
 cp .env.example .env
+# Edit DATABASE_URL if needed (default SQLite file under packages/db)
 pnpm install
+pnpm approve-builds --all   # allow prisma/esbuild native builds (pnpm 11+)
 pnpm db:generate
+pnpm db:push
+pnpm db:seed                # admin@2dcite.com / admin-change-me-now
 ```
 
 ### Run web
@@ -41,35 +45,45 @@ pnpm db:generate
 ```bash
 pnpm dev:web
 # http://localhost:3000
-# http://localhost:3000/api/v1/health
+# Sign in: /login · Admin: /admin/students · Student app: /onboarding/student
 ```
 
 ### Run mobile
 
 ```bash
 pnpm dev:mobile
-# Expo Dev Tools — open on iOS simulator / device
+# Set EXPO_PUBLIC_API_URL if not using localhost (use machine LAN IP on device)
 ```
 
-### Database (when Postgres is available)
+### Database
+
+Local default is **SQLite** (`packages/db/dev.db`). Switch `provider` + `DATABASE_URL` to PostgreSQL for production.
 
 ```bash
-# set DATABASE_URL in .env
 pnpm db:push
 pnpm db:studio
+pnpm db:seed
 ```
+
+### Seeded admin (local only)
+
+| Email | Password |
+|-------|----------|
+| `admin@2dcite.com` | `admin-change-me-now` |
+
+Change before any real deployment.
 
 ## Phases
 
-| Phase | Focus |
-|-------|--------|
-| **0** | Monorepo, shared domain, marketing shell, API health, mobile stub |
-| **1** | Auth, student application, admin approve |
-| **2** | Jobs, PDF upload, Stripe, **payment hold** |
-| **3** | Matching, student review |
-| **4** | Certificate PDF + **fund release** |
-| **5** | 2dcite.com launch polish |
-| **6** | TestFlight / App Store |
+| Phase | Focus | Status |
+|-------|--------|--------|
+| **0** | Monorepo, shared domain, marketing shell, API health, mobile stub | Done |
+| **1** | Auth, student application, admin approve, eligibility gate | Done |
+| **2** | Jobs, PDF upload, Stripe, **payment hold** | Next |
+| **3** | Matching, student review | |
+| **4** | Certificate PDF + **fund release** | |
+| **5** | 2dcite.com launch polish | |
+| **6** | TestFlight / App Store | |
 
 ## Liability copy
 

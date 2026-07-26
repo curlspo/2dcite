@@ -1,12 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
+import { SignupForm } from "@/components/auth/SignupForm";
+import { getSessionUserFromCookies } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Sign up",
 };
 
-export default function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ role?: string }>;
+}) {
+  const user = await getSessionUserFromCookies();
+  if (user) redirect("/dashboard");
+
+  const params = await searchParams;
+  const initialRole = params.role === "student" ? "STUDENT" : "ATTORNEY";
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -15,33 +28,11 @@ export default function SignupPage() {
           Create an account
         </h1>
         <p className="mt-3 text-sm text-muted">
-          Choose your role. Students must complete eligibility verification
-          before receiving assignments. Full registration ships in Phase 1.
+          Students must complete eligibility verification before receiving
+          assignments. Attorneys and judges can submit jobs after Phase 2
+          payments ship.
         </p>
-        <div className="mt-8 grid gap-3">
-          {[
-            {
-              role: "Attorney",
-              desc: "Submit briefs for independent citation review",
-            },
-            {
-              role: "Judge",
-              desc: "Submit orders or drafts for independent citation review",
-            },
-            {
-              role: "Law student (2L/3L)",
-              desc: "Apply with proof of enrollment, legal writing, and professor recommendation",
-            },
-          ].map((item) => (
-            <div
-              key={item.role}
-              className="rounded-lg border border-border bg-card p-4 opacity-80"
-            >
-              <p className="font-medium text-ink">{item.role}</p>
-              <p className="mt-1 text-sm text-muted">{item.desc}</p>
-            </div>
-          ))}
-        </div>
+        <SignupForm initialRole={initialRole} />
         <p className="mt-6 text-sm text-muted">
           Already have an account?{" "}
           <Link href="/login" className="text-accent underline">

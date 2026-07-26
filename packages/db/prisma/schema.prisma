@@ -6,7 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  // Local/dev default: SQLite. Production can use PostgreSQL by switching
+  // provider + DATABASE_URL (schema is portable for our models).
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 

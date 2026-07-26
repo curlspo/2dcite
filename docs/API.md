@@ -12,11 +12,43 @@ All mobile and web app business operations go through this API. Auth tokens must
 - Auth: `Authorization: Bearer <token>` (Phase 1+)
 - Shared Zod schemas: `@2dcite/shared`
 
-## Implemented (Phase 0)
+## Auth
+
+Session tokens are random secrets stored as SHA-256 hashes. Clients may send:
+
+- `Authorization: Bearer <token>` (iOS / API clients)
+- HttpOnly cookie `2dcite_session` (web)
+
+### Implemented (Phase 0–1)
+
+| Method | Path | Notes |
+|--------|------|--------|
+| GET | `/health` | No auth |
+| POST | `/auth/register` | role: ATTORNEY \| JUDGE \| STUDENT; returns `{ token, user }` + sets cookie |
+| POST | `/auth/login` | `{ token, user }` + cookie |
+| POST | `/auth/logout` | invalidate session |
+| GET | `/me` | current user + studentStatus / studentProfile |
+| POST | `/uploads` | multipart `file` + `purpose`; returns `{ key }` (local disk Phase 1) |
+| GET/POST | `/student/application` | eligibility application (STUDENT) |
+| GET | `/admin/students` | admin list (`?status=PENDING`) |
+| POST | `/admin/students/:id/approve` | admin |
+| POST | `/admin/students/:id/reject` | body optional `{ reason }` |
+
+### Planned (Phase 2+)
+
+| Method | Path | Notes |
+|--------|------|--------|
+| GET/POST | `/jobs` | client creates job |
+| GET | `/jobs/:id` | detail |
+| POST | `/jobs/:id/checkout` | Stripe; on success → hold + QUEUED |
+| POST | `/webhooks/stripe` | payment confirmation |
+| POST | `/jobs/:id/accept` | student |
+| POST | `/jobs/:id/decline` | student |
+| POST | `/jobs/:id/review` | findings + attestation → **cert + fund release** |
+| GET | `/jobs/:id/certificate` | download metadata / signed URL |
+| GET | `/admin/payouts` | HELD \| RELEASED \| REFUNDED |
 
 ### `GET /health`
-
-No auth.
 
 ```json
 {
@@ -26,33 +58,6 @@ No auth.
   "time": "2026-07-26T00:00:00.000Z"
 }
 ```
-
-### `GET /me`
-
-Requires Bearer token. Phase 0 returns `401` without token, `501` with token until auth ships.
-
-## Planned
-
-| Method | Path | Notes |
-|--------|------|--------|
-| POST | `/auth/register` | role: ATTORNEY \| JUDGE \| STUDENT |
-| POST | `/auth/login` | returns token + user |
-| POST | `/auth/logout` | invalidate session |
-| PATCH | `/me` | profile |
-| POST | `/student/application` | eligibility docs |
-| POST | `/uploads/presign` | PDF / proof uploads |
-| GET/POST | `/jobs` | client creates job |
-| GET | `/jobs/:id` | detail |
-| POST | `/jobs/:id/checkout` | Stripe; on success → hold + QUEUED |
-| POST | `/webhooks/stripe` | payment confirmation |
-| POST | `/jobs/:id/accept` | student |
-| POST | `/jobs/:id/decline` | student |
-| POST | `/jobs/:id/review` | findings + attestation → **cert + fund release** |
-| GET | `/jobs/:id/certificate` | download metadata / signed URL |
-| GET | `/admin/students` | web admin |
-| POST | `/admin/students/:id/approve` | |
-| POST | `/admin/students/:id/reject` | |
-| GET | `/admin/payouts` | HELD \| RELEASED \| REFUNDED |
 
 ## Funds semantics
 
