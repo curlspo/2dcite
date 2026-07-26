@@ -44,14 +44,25 @@ Session tokens are random secrets stored as SHA-256 hashes. Clients may send:
 | POST | `/jobs/:id/checkout` | Stripe Checkout **or** dev mock when no Stripe keys → **Payment SUCCEEDED + Payout HELD + QUEUED** |
 | POST | `/webhooks/stripe` | `checkout.session.completed` → same hold path |
 
-### Planned (Phase 3+)
+### Implemented (Phase 3)
 
 | Method | Path | Notes |
 |--------|------|--------|
-| POST | `/jobs/:id/accept` | student |
-| POST | `/jobs/:id/decline` | student |
-| POST | `/jobs/:id/review` | findings + attestation → **cert + fund release** |
-| GET | `/jobs/:id/certificate` | download metadata / signed URL |
+| POST | `/jobs/:id/accept` | student ASSIGNED → IN_REVIEW, sets dueAt |
+| POST | `/jobs/:id/decline` | student; requeues + re-match |
+| POST | `/jobs/:id/review` | findings + attestation → **COMPLETED** |
+| GET | `/jobs/:id/document` | stream PDF (client / assigned student / admin) |
+| GET | `/student/assignments` | active + history |
+| POST | `/matching/run` | admin: timeout reassign + drain queue |
+
+Matching: after pay, auto-assign next **APPROVED** student with zero active jobs; **RUSH** before standard. Accept timeout requeues.
+
+### Planned (Phase 4+)
+
+| Method | Path | Notes |
+|--------|------|--------|
+| (on review) | auto certificate | COMPLETED → CERTIFIED + **payout RELEASED** |
+| GET | `/jobs/:id/certificate` | download PDF cert |
 | GET | `/admin/payouts` | HELD \| RELEASED \| REFUNDED |
 
 ### `GET /health`

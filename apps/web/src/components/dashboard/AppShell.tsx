@@ -19,6 +19,7 @@ export function AppShell({
       : user.role === "STUDENT"
         ? [
             { href: "/dashboard", label: "Home" },
+            { href: "/assignments", label: "Assignments" },
             { href: "/onboarding/student", label: "Eligibility" },
           ]
         : [

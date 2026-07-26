@@ -107,6 +107,16 @@ export async function markJobPaid(opts: {
     });
 
     return updated;
+  }).then(async (job) => {
+    // Auto-match after funds held (outside payment transaction)
+    try {
+      const { assignJobIfPossible } = await import("@/lib/matching");
+      const assigned = await assignJobIfPossible(job.id);
+      return assigned ?? job;
+    } catch (e) {
+      console.error("Matching after pay failed", e);
+      return job;
+    }
   });
 }
 

@@ -19,8 +19,8 @@ export default async function DashboardPage() {
       </h1>
       <p className="mt-2 text-muted">
         {user.role === "STUDENT"
-          ? "Student home — assignments appear here after you are approved."
-          : "Client home — job submission ships in Phase 2 (pay on upload, funds held until certificate)."}
+          ? "Student home — accept assignments and complete citation reviews."
+          : "Client home — submit documents for independent citation review."}
       </p>
 
       {user.role === "STUDENT" && gate && (
@@ -38,8 +38,16 @@ export default async function DashboardPage() {
 
       {user.role === "STUDENT" && user.studentProfile?.status === "APPROVED" && (
         <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-900">
-          You are approved and eligible for matching (one active assignment at a
-          time). Assignment queue arrives in Phase 3.
+          <p>
+            You are approved and eligible for matching (one active assignment at
+            a time).
+          </p>
+          <Link
+            href="/assignments"
+            className="mt-2 inline-block font-medium underline"
+          >
+            View assignments →
+          </Link>
         </div>
       )}
 

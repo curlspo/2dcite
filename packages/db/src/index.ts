@@ -19,4 +19,10 @@ if (process.env.NODE_ENV !== "production") {
 
 export { PrismaClient };
 export * from "@prisma/client";
-export { findNextAvailableStudent } from "./matching";
+export {
+  findNextAvailableStudent,
+  findNextQueuedJob,
+  assignmentDeadline,
+  reviewDueAt,
+  ASSIGNMENT_ACCEPT_MINUTES,
+} from "./matching";

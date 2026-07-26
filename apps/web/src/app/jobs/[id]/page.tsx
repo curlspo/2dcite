@@ -111,6 +111,30 @@ export default async function JobDetailPage({
           <PayJobButton jobId={job.id} amountDisplay={job.grossFeeDisplay} />
         </div>
       )}
+
+      {job.student && (
+        <p className="mt-4 text-sm text-muted">
+          Student: {job.student.name} ({job.status})
+        </p>
+      )}
+
+      {job.review && (
+        <div className="mt-8 rounded-lg border border-border bg-card p-5 text-sm">
+          <p className="font-medium text-ink">Review findings</p>
+          <p className="mt-1 text-xs text-muted">
+            Submitted {new Date(job.review.submittedAt).toLocaleString()} ·
+            independent verification only — not legal advice
+          </p>
+          <pre className="mt-3 max-h-80 overflow-auto rounded bg-background p-3 text-xs text-muted">
+            {JSON.stringify(job.review.findings, null, 2)}
+          </pre>
+          {job.review.overallNotes && (
+            <p className="mt-3 whitespace-pre-wrap text-muted">
+              {job.review.overallNotes}
+            </p>
+          )}
+        </div>
+      )}
     </AppShell>
   );
 }

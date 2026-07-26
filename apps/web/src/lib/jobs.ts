@@ -111,5 +111,14 @@ export function serializeJob(job: JobWithRelations) {
           issuedAt: job.certificate.issuedAt,
         }
       : null,
+    review: job.review
+      ? {
+          id: job.review.id,
+          findings: job.review.findings,
+          overallNotes: job.review.overallNotes,
+          submittedAt: job.review.submittedAt,
+          attestationAt: job.review.attestationAt,
+        }
+      : null,
   };
 }
