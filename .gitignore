@@ -1,0 +1,41 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# builds
+.next
+.turbo
+dist
+build
+out
+.expo
+web-build
+
+# env
+.env
+.env.local
+.env.*.local
+
+# debug / OS
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+*.pem
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# prisma
+packages/db/prisma/*.db
+packages/db/prisma/*.db-journal
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# uploads / certs (local)
+.tmp
+.uploads

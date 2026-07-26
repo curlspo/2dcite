@@ -1,0 +1,274 @@
+// 2dcite — core domain schema (Phase 0 foundation)
+// Funds: client pays on upload → platform HELD → release student share on Certificate creation
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ATTORNEY
+  JUDGE
+  STUDENT
+  ADMIN
+}
+
+enum StudentYear {
+  L2
+  L3
+}
+
+enum StudentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum JobStatus {
+  DRAFT
+  AWAITING_PAYMENT
+  QUEUED
+  ASSIGNED
+  IN_REVIEW
+  COMPLETED
+  CERTIFIED
+  CANCELLED
+  REASSIGNING
+  FLAGGED
+}
+
+enum TurnaroundTier {
+  STANDARD_48H
+  RUSH
+}
+
+enum PayoutStatus {
+  HELD
+  RELEASED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum ClientPlatform {
+  WEB
+  IOS
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String?
+  name         String
+  role         UserRole
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  studentProfile StudentProfile?
+  clientProfile  ClientProfile?
+  deviceTokens   DeviceToken[]
+  jobsAsClient   Job[]            @relation("ClientJobs")
+  jobsAsStudent  Job[]            @relation("StudentJobs")
+  acknowledgments LiabilityAcknowledgment[]
+  auditLogs      AuditLog[]
+  sessions       Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model StudentProfile {
+  id                       String        @id @default(cuid())
+  userId                   String        @unique
+  lawSchool                String
+  year                     StudentYear
+  legalWritingCoursePassed Boolean       @default(false)
+  professorName            String?
+  professorEmail           String?
+  enrollmentProofKey       String?
+  legalWritingProofKey     String?
+  professorRecKey          String?
+  status                   StudentStatus @default(PENDING)
+  reviewedAt               DateTime?
+  reviewedById             String?
+  rejectionReason          String?
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClientProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  barState  String?
+  orgName   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String
+  platform  ClientPlatform @default(IOS)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@index([userId])
+}
+
+model Job {
+  id               String         @id @default(cuid())
+  clientId         String
+  studentId        String?
+  title            String
+  instructions     String?
+  status           JobStatus      @default(DRAFT)
+  turnaroundTier   TurnaroundTier @default(STANDARD_48H)
+  pdfKey           String?
+  pdfFileName      String?
+  baseFeeCents     Int
+  rushFeeCents     Int            @default(0)
+  grossFeeCents    Int
+  platformFeeCents Int
+  studentFeeCents  Int
+  dueAt            DateTime?
+  assignedAt       DateTime?
+  acceptedAt       DateTime?
+  completedAt      DateTime?
+  certifiedAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  client   User          @relation("ClientJobs", fields: [clientId], references: [id])
+  student  User?         @relation("StudentJobs", fields: [studentId], references: [id])
+  review   Review?
+  certificate Certificate?
+  payment  Payment?
+  payout   Payout?
+  acknowledgments LiabilityAcknowledgment[]
+
+  @@index([status])
+  @@index([clientId])
+  @@index([studentId])
+  @@index([turnaroundTier, status, createdAt])
+}
+
+model Review {
+  id                   String   @id @default(cuid())
+  jobId                String   @unique
+  findings             Json
+  overallNotes         String?
+  attestationAt        DateTime
+  disclaimerCopyVersion String
+  platform             ClientPlatform
+  submittedAt          DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+model Certificate {
+  id            String   @id @default(cuid())
+  jobId         String   @unique
+  certNumber    String   @unique
+  pdfKey        String?
+  issuedAt      DateTime @default(now())
+  scopeVersion  String
+  documentTitle String
+  clientName    String
+  clientRole    UserRole
+  studentName   String?
+  lawSchool     String?
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+/// Client payment captured on upload; funds held by platform until certificate.
+model Payment {
+  id                    String        @id @default(cuid())
+  jobId                 String        @unique
+  amountCents           Int
+  status                PaymentStatus @default(PENDING)
+  stripePaymentIntentId String?       @unique
+  stripeCheckoutSessionId String?     @unique
+  paidAt                DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+/// Student share held until Certificate auto-creation, then RELEASED.
+model Payout {
+  id                 String       @id @default(cuid())
+  jobId              String       @unique
+  studentId          String?
+  grossCents         Int
+  platformFeeCents   Int
+  studentAmountCents Int
+  status             PayoutStatus @default(HELD)
+  heldAt             DateTime     @default(now())
+  releasedAt         DateTime?
+  stripeTransferId   String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([studentId])
+}
+
+model LiabilityAcknowledgment {
+  id          String         @id @default(cuid())
+  userId      String
+  jobId       String?
+  copyVersion String
+  acceptedIds Json
+  platform    ClientPlatform
+  acceptedAt  DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([jobId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

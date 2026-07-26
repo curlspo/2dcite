@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "2dcite",
+    "slug": "2dcite",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "twodcite",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.twodcite.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Upload PDF documents for citation review."
+      }
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
