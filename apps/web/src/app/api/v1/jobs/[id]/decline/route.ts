@@ -14,7 +14,7 @@ export async function POST(
     return jsonOk({
       ok: true,
       reassigned: Boolean(job && job.studentId && job.studentId !== user.id),
-      job: job ? serializeJob(job) : null,
+      job: job ? serializeJob(job, user) : null,
     });
   } catch (err) {
     return handleRouteError(err);

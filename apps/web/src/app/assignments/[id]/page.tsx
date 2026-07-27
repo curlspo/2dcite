@@ -30,7 +30,7 @@ export default async function AssignmentDetailPage({
   });
 
   if (!jobRow || jobRow.studentId !== user.id) notFound();
-  const job = serializeJob(jobRow);
+  const job = serializeJob(jobRow, user);
 
   return (
     <AppShell user={user}>

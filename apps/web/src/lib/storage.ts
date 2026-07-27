@@ -1,13 +1,14 @@
+import "server-only";
 import { mkdir, writeFile, readFile, access } from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
 
 /**
- * Upload storage:
- * - If BLOB_READ_WRITE_TOKEN is set → Vercel Blob (production)
- * - Else → local disk under UPLOAD_DIR (development)
+ * Upload storage (OWASP roadmap: private blobs).
+ * - BLOB_READ_WRITE_TOKEN set → Vercel Blob with access: "private"
+ * - Else → local disk under UPLOAD_DIR
  *
- * Keys are always our logical keys; Blob stores with pathname = key.
+ * Reads always go through this module (authenticated API), never public URLs.
  */
 
 function uploadRoot() {
@@ -24,113 +25,131 @@ function useBlob(): boolean {
 export function newObjectKey(prefix: string, filename: string): string {
   const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
   const id = randomBytes(12).toString("hex");
-  return `${prefix}/${id}-${safe}`;
+  const cleanPrefix = prefix
+    .replace(/\\/g, "/")
+    .split("/")
+    .filter((p) => p && p !== "." && p !== "..")
+    .join("/");
+  return `${cleanPrefix}/${id}-${safe}`;
 }
 
-/** Map logical key → Blob URL for private retrieval (stored alongside via meta key optional) */
-const blobUrlMeta = new Map<string, string>();
+export function assertSafeStorageKey(key: string): void {
+  if (!key || key.length > 512) {
+    throw Object.assign(new Error("Invalid storage key"), { status: 400 });
+  }
+  if (
+    key.includes("\0") ||
+    key.includes("..") ||
+    key.startsWith("/") ||
+    key.includes("\\")
+  ) {
+    throw Object.assign(new Error("Invalid storage key"), { status: 400 });
+  }
+  if (!key.startsWith("users/") && !key.startsWith("certificates/")) {
+    throw Object.assign(new Error("Invalid storage key"), { status: 400 });
+  }
+}
 
 export async function saveUpload(
   key: string,
   data: Buffer,
   contentType?: string
 ): Promise<{ key: string; contentType?: string; url?: string }> {
+  assertSafeStorageKey(key);
   if (useBlob()) {
     const { put } = await import("@vercel/blob");
+    // Private: not world-readable; only accessible via token-authenticated get()
     const blob = await put(key, data, {
-      access: "public", // certificates/docs need download; tighten with private + tokens later
+      access: "private",
       contentType: contentType || "application/octet-stream",
       addRandomSuffix: false,
       token: process.env.BLOB_READ_WRITE_TOKEN,
+      allowOverwrite: true,
     });
-    // Persist URL mapping in a sidecar meta file on blob is overkill; store URL as key prefix
-    // We encode: for blob mode, key remains logical; read uses head/list by pathname
-    blobUrlMeta.set(key, blob.url);
-    // Also write a small JSON pointer blob for cold starts
-    try {
-      await put(
-        `${key}.url.json`,
-        JSON.stringify({ url: blob.url, contentType }),
-        {
-          access: "public",
-          contentType: "application/json",
-          addRandomSuffix: false,
-          token: process.env.BLOB_READ_WRITE_TOKEN,
-        }
-      );
-    } catch {
-      /* non-fatal */
-    }
     return { key, contentType, url: blob.url };
   }
 
-  const full = path.join(uploadRoot(), key);
+  const full = resolveLocalPath(key);
   await mkdir(path.dirname(full), { recursive: true });
   await writeFile(full, data);
   return { key, contentType };
 }
 
+function resolveLocalPath(key: string): string {
+  assertSafeStorageKey(key);
+  const root = path.resolve(uploadRoot());
+  const full = path.resolve(root, key);
+  if (full !== root && !full.startsWith(root + path.sep)) {
+    throw Object.assign(new Error("Invalid storage key"), { status: 400 });
+  }
+  return full;
+}
+
 export async function readUpload(key: string): Promise<Buffer> {
+  assertSafeStorageKey(key);
   if (useBlob()) {
-    let url = blobUrlMeta.get(key);
-    if (!url) {
-      // Resolve via pointer object
+    const { get } = await import("@vercel/blob");
+    // Prefer pathname (key) with private access
+    const result = await get(key, {
+      access: "private",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+    if (!result?.stream) {
+      // Fallback: list by prefix for legacy public blobs during migration
       try {
-        const pointerRes = await fetch(
-          await resolveBlobUrl(`${key}.url.json`)
+        const { list } = await import("@vercel/blob");
+        const listed = await list({
+          prefix: key,
+          limit: 5,
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+        });
+        const hit = listed.blobs.find(
+          (b) => b.pathname === key || b.pathname.endsWith(key)
         );
-        if (pointerRes.ok) {
-          const meta = (await pointerRes.json()) as { url: string };
-          url = meta.url;
-          blobUrlMeta.set(key, url);
+        if (hit?.url) {
+          const legacy = await fetch(hit.url);
+          if (legacy.ok) {
+            return Buffer.from(await legacy.arrayBuffer());
+          }
         }
       } catch {
         /* fall through */
       }
+      throw Object.assign(new Error("Blob not found"), { status: 404 });
     }
-    if (!url) {
-      url = await resolveBlobUrl(key);
+    const chunks: Buffer[] = [];
+    const reader = result.stream.getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) chunks.push(Buffer.from(value));
     }
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`Blob fetch failed for ${key}: ${res.status}`);
-    }
-    return Buffer.from(await res.arrayBuffer());
+    return Buffer.concat(chunks);
   }
 
-  const full = path.join(uploadRoot(), key);
-  return readFile(full);
-}
-
-async function resolveBlobUrl(pathname: string): Promise<string> {
-  // If key was stored as full URL already
-  if (pathname.startsWith("http://") || pathname.startsWith("https://")) {
-    return pathname;
-  }
-  const { list } = await import("@vercel/blob");
-  const result = await list({
-    prefix: pathname,
-    limit: 5,
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
-  const hit = result.blobs.find(
-    (b) => b.pathname === pathname || b.pathname.endsWith(pathname)
-  );
-  if (!hit) {
-    throw new Error(`Blob not found: ${pathname}`);
-  }
-  return hit.url;
+  return readFile(resolveLocalPath(key));
 }
 
 export async function uploadExists(key: string): Promise<boolean> {
+  try {
+    assertSafeStorageKey(key);
+  } catch {
+    return false;
+  }
   if (useBlob()) {
     try {
-      await resolveBlobUrl(key);
+      const { head } = await import("@vercel/blob");
+      await head(key, { token: process.env.BLOB_READ_WRITE_TOKEN });
       return true;
     } catch {
       try {
-        const pointer = await resolveBlobUrl(`${key}.url.json`);
-        return Boolean(pointer);
+        const { list } = await import("@vercel/blob");
+        const listed = await list({
+          prefix: key,
+          limit: 1,
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+        });
+        return listed.blobs.some((b) => b.pathname === key);
       } catch {
         return false;
       }
@@ -138,13 +157,13 @@ export async function uploadExists(key: string): Promise<boolean> {
   }
 
   try {
-    await access(path.join(uploadRoot(), key));
+    await access(resolveLocalPath(key));
     return true;
   } catch {
     return false;
   }
 }
 
-export function storageMode(): "blob" | "local" {
-  return useBlob() ? "blob" : "local";
+export function storageMode(): "blob-private" | "local" {
+  return useBlob() ? "blob-private" : "local";
 }

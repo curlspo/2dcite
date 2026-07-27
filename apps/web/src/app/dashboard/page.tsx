@@ -52,23 +52,38 @@ export default async function DashboardPage() {
       )}
 
       {(user.role === "ATTORNEY" || user.role === "JUDGE") && (
-        <div className="mt-6 space-y-3 rounded-lg border border-border bg-card p-5 text-sm text-muted">
-          <p className="font-medium text-ink">Submit a citation review</p>
-          <p>
-            Upload a PDF, choose Standard or Rush, accept liability
-            acknowledgments, and pay. {FUNDS_HOLD_COPY.clientPayOnUpload}
-          </p>
-          <p>{FUNDS_HOLD_COPY.releaseOnCertificate}</p>
-          <Link
-            href="/jobs/new"
-            className="btn-primary"
-            style={{ color: "#ffffff", backgroundColor: "#16325c" }}
-          >
-            New citation review
-          </Link>
-          <Link href="/jobs" className="ml-3 text-sm text-accent underline">
-            View jobs
-          </Link>
+        <div className="mt-6 space-y-4">
+          <div className="space-y-3 rounded-lg border border-border bg-card p-5 text-sm text-muted">
+            <p className="font-medium text-ink">Submit a citation review</p>
+            <p>
+              Upload a PDF, choose Standard or Rush, accept liability
+              acknowledgments, and pay. {FUNDS_HOLD_COPY.clientPayOnUpload}
+            </p>
+            <p>{FUNDS_HOLD_COPY.releaseOnCertificate}</p>
+            <Link
+              href="/jobs/new"
+              className="btn-primary"
+              style={{ color: "#ffffff", backgroundColor: "#16325c" }}
+            >
+              New citation review
+            </Link>
+            <Link href="/jobs" className="ml-3 text-sm text-accent underline">
+              View jobs
+            </Link>
+          </div>
+          <div className="rounded-lg border border-accent/30 bg-accent-soft/40 p-5 text-sm text-muted">
+            <p className="font-medium text-ink">Membership — $99/month</p>
+            <p className="mt-1">
+              1 citation check included each month, plus 10% off additional
+              reviews.
+            </p>
+            <Link
+              href="/membership"
+              className="mt-3 inline-block font-medium text-accent underline"
+            >
+              View membership →
+            </Link>
+          </div>
         </div>
       )}
     </AppShell>

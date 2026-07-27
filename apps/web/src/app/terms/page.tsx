@@ -4,6 +4,7 @@ import {
   CONFIDENTIALITY_CORE,
   DISCLAIMER_COPY_VERSION,
   FUNDS_HOLD_COPY,
+  IP_NOTICE,
   LIABILITY_CORE,
   POST_FILING_CORE,
   SUPPORT_EMAIL,
@@ -170,18 +171,49 @@ export default function TermsPage() {
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          9. Acceptable use
+          9. Blind matching (no student identity to counsel)
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.blindMatching}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          {CONFIDENTIALITY_CORE.blindMatchingRetention}
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          Attorneys and judges agree not to attempt to discover, coerce, or
+          retaliate against student reviewers based on review outcomes.
+          Attempting to unmask a student reviewer outside lawful process is a
+          material breach and may result in suspension.
+        </p>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          10. Acceptable use
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           You may not use the Platform for unlawful purposes, to harass others,
           to upload malware, to circumvent eligibility rules, to misrepresent
-          credentials, or to pressure students to disclose confidential review
-          outcomes outside the Platform. We may suspend accounts for abuse or
-          risk.
+          credentials, to inject malicious or abusive input, or to pressure
+          students to disclose confidential review outcomes outside the
+          Platform. We may suspend accounts for abuse or risk. We validate and
+          sanitize user inputs; attempts to exploit endpoints may be logged and
+          blocked.
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          10. Limitation of liability
+          11. Intellectual property; no software license
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted">{IP_NOTICE.copyright}</p>
+        <p className="mt-3 leading-relaxed text-muted">{IP_NOTICE.noLicense}</p>
+        <p className="mt-3 leading-relaxed text-muted">
+          You retain ownership of materials you upload. You grant 2dcite a
+          limited, worldwide, non-exclusive license to host, process, transmit,
+          display, and store those materials solely to operate the Services
+          (including matching, review, certificates, payment, security, and
+          lawful retention).
+        </p>
+
+        <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
+          12. Limitation of liability
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           To the fullest extent permitted by law, 2dcite and its operators are
@@ -194,7 +226,7 @@ export default function TermsPage() {
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
-          11. Contact
+          13. Contact
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
           Questions:{" "}

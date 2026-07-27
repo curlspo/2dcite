@@ -1,0 +1,5 @@
+Contact: mailto:support@2dcite.com
+Preferred-Languages: en
+Canonical: https://2dcite.com/.well-known/security.txt
+Policy: https://2dcite.com/privacy
+Expires: 2027-07-27T00:00:00.000Z

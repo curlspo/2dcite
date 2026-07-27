@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, BrowserApiError } from "@/lib/api-browser";
+import {
+  TurnstileWidget,
+  resetTurnstile,
+} from "@/components/captcha/TurnstileWidget";
 
 type Props = {
   initial?: {
@@ -34,6 +38,7 @@ export function StudentApplicationForm({ initial }: Props) {
   const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null);
   const [writingFile, setWritingFile] = useState<File | null>(null);
   const [recFile, setRecFile] = useState<File | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -52,6 +57,10 @@ export function StudentApplicationForm({ initial }: Props) {
     }
     if (!enrollmentFile || !writingFile || !recFile) {
       setError("Upload enrollment proof, legal writing proof, and professor recommendation.");
+      return;
+    }
+    if (!captchaToken) {
+      setError("Please complete the security check and try again.");
       return;
     }
 
@@ -74,6 +83,7 @@ export function StudentApplicationForm({ initial }: Props) {
           enrollmentProofKey: enrollment.key,
           legalWritingProofKey: writing.key,
           professorRecKey: rec.key,
+          captchaToken,
         }),
       });
       setMessage(data.message);
@@ -82,6 +92,8 @@ export function StudentApplicationForm({ initial }: Props) {
       setError(
         err instanceof BrowserApiError ? err.message : "Submission failed"
       );
+      setCaptchaToken(null);
+      resetTurnstile();
     } finally {
       setLoading(false);
     }
@@ -209,14 +221,17 @@ export function StudentApplicationForm({ initial }: Props) {
       )}
 
       {!locked && (
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary"
-          style={{ color: "#ffffff", backgroundColor: "#16325c" }}
-        >
-          {loading ? "Submitting…" : "Submit for admin review"}
-        </button>
+        <>
+          <TurnstileWidget onToken={setCaptchaToken} />
+          <button
+            type="submit"
+            disabled={loading || !captchaToken}
+            className="btn-primary"
+            style={{ color: "#ffffff", backgroundColor: "#16325c" }}
+          >
+            {loading ? "Submitting…" : "Submit for admin review"}
+          </button>
+        </>
       )}
     </form>
   );

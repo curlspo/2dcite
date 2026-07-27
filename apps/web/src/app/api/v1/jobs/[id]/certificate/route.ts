@@ -3,11 +3,10 @@ import { requireUser } from "@/lib/session";
 import { readUpload } from "@/lib/storage";
 import { issueCertificateAndReleaseFunds } from "@/lib/certificates";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
+import { clientIp, rateLimitPaidApi } from "@/lib/rate-limit";
 
 /**
- * GET — metadata or ?download=1 for PDF bytes
- * Client, assigned student, or admin.
- * If job COMPLETED without cert (legacy Phase 3 rows), issues cert on demand.
+ * GET — metadata or ?download=1 for PDF bytes (Blob read when downloading).
  */
 export async function GET(
   request: Request,
@@ -19,6 +18,22 @@ export async function GET(
     const url = new URL(request.url);
     const download = url.searchParams.get("download") === "1";
 
+    // Downloads (and on-demand cert generation) hit Blob storage
+    if (download) {
+      const paidRl = await rateLimitPaidApi("blobRead", {
+        userId: user.id,
+        ip: clientIp(request),
+      });
+      if (!paidRl.ok) {
+        return jsonError(
+          "Too many download requests. Please try again later.",
+          429,
+          "RATE_LIMITED",
+          { retryAfterSec: paidRl.retryAfterSec }
+        );
+      }
+    }
+
     const job = await prisma.job.findUnique({
       where: { id },
       include: {
@@ -28,13 +43,14 @@ export async function GET(
         student: true,
       },
     });
-    if (!job) return jsonError("Job not found", 404);
+    // Uniform 404 for missing and unauthorized (reduces IDOR oracle)
+    if (!job) return jsonError("Not found", 404, "NOT_FOUND");
 
     const allowed =
       user.role === "ADMIN" ||
       job.clientId === user.id ||
       job.studentId === user.id;
-    if (!allowed) return jsonError("Forbidden", 403);
+    if (!allowed) return jsonError("Not found", 404, "NOT_FOUND");
 
     // Backfill cert for COMPLETED jobs from before Phase 4
     let certificate = job.certificate;
@@ -52,26 +68,28 @@ export async function GET(
     }
 
     if (!certificate) {
-      return jsonError(
-        "Certificate not available yet. Complete student review first.",
-        404,
-        "NO_CERTIFICATE"
-      );
+      return jsonError("Not found", 404, "NOT_FOUND");
     }
 
     if (download) {
       if (!certificate.pdfKey) {
-        return jsonError("Certificate PDF missing", 404);
+        return jsonError("Not found", 404, "NOT_FOUND");
       }
       const buf = await readUpload(certificate.pdfKey);
+      const safeName = certificate.certNumber.replace(/[^\w.\-]+/g, "_");
       return new Response(new Uint8Array(buf), {
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="${certificate.certNumber}.pdf"`,
+          "Content-Disposition": `attachment; filename="${safeName}.pdf"`,
           "Cache-Control": "private, no-store",
+          "X-Content-Type-Options": "nosniff",
         },
       });
     }
+
+    // Blind matching: never return studentName/lawSchool to non-admin clients
+    const revealStudent =
+      user.role === "ADMIN" || user.role === "STUDENT";
 
     return jsonOk({
       certificate: {
@@ -80,8 +98,9 @@ export async function GET(
         issuedAt: certificate.issuedAt,
         documentTitle: certificate.documentTitle,
         clientName: certificate.clientName,
-        studentName: certificate.studentName,
-        lawSchool: certificate.lawSchool,
+        studentName: revealStudent ? certificate.studentName : null,
+        lawSchool: revealStudent ? certificate.lawSchool : null,
+        reviewerLabel: "Independent qualified law-student reviewer",
         scopeVersion: certificate.scopeVersion,
         downloadPath: `/api/v1/jobs/${id}/certificate?download=1`,
       },

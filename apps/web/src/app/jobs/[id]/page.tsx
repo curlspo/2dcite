@@ -39,7 +39,7 @@ export default async function JobDetailPage({
     jobRow.studentId === user.id;
   if (!allowed) redirect("/dashboard");
 
-  const job = serializeJob(jobRow);
+  const job = serializeJob(jobRow, user);
   const isClient = jobRow.clientId === user.id;
 
   return (
@@ -112,9 +112,11 @@ export default async function JobDetailPage({
         </div>
       )}
 
-      {job.student && (
+      {job.studentAssigned && (
         <p className="mt-4 text-sm text-muted">
-          Student: {job.student.name} ({job.status})
+          {job.student
+            ? `Assigned to you (${job.status})`
+            : `Independent student reviewer assigned (${job.status}) — identity withheld under blind matching.`}
         </p>
       )}
 

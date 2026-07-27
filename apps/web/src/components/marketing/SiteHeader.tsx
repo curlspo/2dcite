@@ -5,6 +5,7 @@ import { useState } from "react";
 import { BrandLockup } from "./BrandMark";
 
 const NAV = [
+  { href: "/about", label: "About" },
   { href: "/#how-it-works", label: "How it works" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/#eligibility", label: "Eligibility" },

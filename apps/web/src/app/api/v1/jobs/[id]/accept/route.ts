@@ -11,7 +11,7 @@ export async function POST(
     const user = await requireRole(request, ["STUDENT"]);
     const { id } = await context.params;
     const job = await acceptAssignment(id, user.id);
-    return jsonOk({ job: serializeJob(job) });
+    return jsonOk({ job: serializeJob(job, user) });
   } catch (err) {
     return handleRouteError(err);
   }

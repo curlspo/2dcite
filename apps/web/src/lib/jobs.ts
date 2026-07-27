@@ -4,7 +4,16 @@ import {
   computeFeeBreakdown,
   type TurnaroundTier,
 } from "@2dcite/shared";
-import type { Job, Payment, Payout, Certificate, Review, User } from "@2dcite/db";
+import type {
+  Job,
+  Payment,
+  Payout,
+  Certificate,
+  Review,
+  User,
+  PricingMode,
+  UserRole,
+} from "@2dcite/db";
 
 export function requiredAckIds(): string[] {
   return CLIENT_SUBMIT_ACKNOWLEDGMENTS.map((a) => a.id);
@@ -49,9 +58,30 @@ export type JobWithRelations = Job & {
   review?: Review | null;
   student?: Pick<User, "id" | "name"> | null;
   client?: Pick<User, "id" | "name" | "email" | "role"> | null;
+  pricingMode?: PricingMode;
+  listGrossCents?: number | null;
 };
 
-export function serializeJob(job: JobWithRelations) {
+export type SerializeViewer = {
+  id: string;
+  role: UserRole | string;
+};
+
+/**
+ * Serialize a job for API/UI.
+ * Blind matching: attorneys/judges never receive student id or name.
+ * Admins and the assigned student may see identity.
+ */
+export function serializeJob(
+  job: JobWithRelations,
+  viewer?: SerializeViewer | null
+) {
+  const role = viewer?.role;
+  const isAdmin = role === "ADMIN";
+  const isAssignedStudent =
+    role === "STUDENT" && viewer?.id != null && viewer.id === job.studentId;
+  const revealStudentIdentity = isAdmin || isAssignedStudent;
+
   return {
     id: job.id,
     title: job.title,
@@ -65,7 +95,10 @@ export function serializeJob(job: JobWithRelations) {
     grossFeeCents: job.grossFeeCents,
     platformFeeCents: job.platformFeeCents,
     studentFeeCents: job.studentFeeCents,
+    listGrossCents: job.listGrossCents ?? job.grossFeeCents,
+    pricingMode: job.pricingMode ?? "LIST",
     grossFeeDisplay: formatUsd(job.grossFeeCents),
+    listGrossDisplay: formatUsd(job.listGrossCents ?? job.grossFeeCents),
     dueAt: job.dueAt,
     assignedAt: job.assignedAt,
     acceptedAt: job.acceptedAt,
@@ -74,9 +107,13 @@ export function serializeJob(job: JobWithRelations) {
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
     clientId: job.clientId,
-    studentId: job.studentId,
-    student: job.student
-      ? { id: job.student.id, name: job.student.name }
+    /** True when a student is assigned; identity redacted for clients */
+    studentAssigned: Boolean(job.studentId),
+    studentId: revealStudentIdentity ? job.studentId : null,
+    student: revealStudentIdentity
+      ? job.student
+        ? { id: job.student.id, name: job.student.name }
+        : null
       : null,
     client: job.client
       ? {

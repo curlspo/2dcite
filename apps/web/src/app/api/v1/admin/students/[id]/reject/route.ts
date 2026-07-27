@@ -1,6 +1,6 @@
 import { prisma } from "@2dcite/db";
 import { z } from "zod";
-import { requireRole } from "@/lib/session";
+import { requireAdminStepUp } from "@/lib/session";
 import { writeAudit } from "@/lib/audit";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
 
@@ -13,7 +13,7 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admin = await requireRole(request, ["ADMIN"]);
+    const { user: admin } = await requireAdminStepUp(request);
     const { id } = await context.params;
     const body = bodySchema.parse(await request.json().catch(() => ({})));
 

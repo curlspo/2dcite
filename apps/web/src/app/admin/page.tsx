@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { prisma } from "@2dcite/db";
+import { prisma, enterUserRls } from "@2dcite/db";
 import { getSessionUserFromCookies } from "@/lib/session";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { formatUsd } from "@/lib/jobs";
@@ -9,7 +9,9 @@ export default async function AdminHomePage() {
   const user = await getSessionUserFromCookies();
   if (!user) redirect("/login");
   if (user.role !== "ADMIN") redirect("/dashboard");
+  if (!user.mfaEnabled) redirect("/admin/mfa");
 
+  const cards = await enterUserRls(user, async () => {
   const [
     pendingStudents,
     queuedJobs,
@@ -31,7 +33,7 @@ export default async function AdminHomePage() {
     _sum: { studentAmountCents: true },
   });
 
-  const cards = [
+  return [
     {
       href: "/admin/students",
       label: "Pending students",
@@ -59,6 +61,7 @@ export default async function AdminHomePage() {
       value: String(certifiedJobs),
     },
   ];
+  });
 
   return (
     <AppShell user={user}>

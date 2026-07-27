@@ -1,3 +1,4 @@
+import "server-only";
 import { prisma } from "@2dcite/db";
 import { assignJobIfPossible, reassignTimedOutAssignments } from "@/lib/matching";
 import { writeAudit } from "@/lib/audit";

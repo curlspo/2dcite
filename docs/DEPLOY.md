@@ -117,6 +117,8 @@ Copy from `.env.production.example`. In Vercel → Project → **Settings → En
 | `STRIPE_WEBHOOK_SECRET` | from Stripe webhook endpoint |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` |
 | `BLOB_READ_WRITE_TOKEN` | Vercel → Storage → Blob |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key (public) |
+| `TURNSTILE_SECRET_KEY` | Turnstile secret (server only) |
 
 Generate secret:
 

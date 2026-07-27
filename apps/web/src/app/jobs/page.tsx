@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { prisma } from "@2dcite/db";
+import { prisma, enterUserRls } from "@2dcite/db";
 import { getSessionUserFromCookies } from "@/lib/session";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { formatUsd, serializeJob } from "@/lib/jobs";
@@ -10,17 +10,19 @@ export default async function JobsPage() {
   if (!user) redirect("/login");
   if (user.role === "STUDENT") redirect("/dashboard");
 
-  const jobs = await prisma.job.findMany({
-    where: user.role === "ADMIN" ? undefined : { clientId: user.id },
-    orderBy: { createdAt: "desc" },
-    include: {
-      payment: true,
-      payout: true,
-      certificate: true,
-      student: { select: { id: true, name: true } },
-      client: { select: { id: true, name: true, email: true, role: true } },
-    },
-  });
+  const jobs = await enterUserRls(user, () =>
+    prisma.job.findMany({
+      where: user.role === "ADMIN" ? undefined : { clientId: user.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        payment: true,
+        payout: true,
+        certificate: true,
+        student: { select: { id: true, name: true } },
+        client: { select: { id: true, name: true, email: true, role: true } },
+      },
+    })
+  );
 
   return (
     <AppShell user={user}>
@@ -54,7 +56,7 @@ export default async function JobsPage() {
       ) : (
         <ul className="mt-8 divide-y divide-border rounded-lg border border-border bg-card">
           {jobs.map((j) => {
-            const job = serializeJob(j);
+            const job = serializeJob(j, user);
             return (
               <li key={j.id}>
                 <Link

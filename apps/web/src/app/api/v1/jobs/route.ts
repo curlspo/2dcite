@@ -1,20 +1,17 @@
-import { prisma } from "@2dcite/db";
+import { prisma, applyRlsConfig, enterUserRls } from "@2dcite/db";
 import { createJobSchema, ClientPlatform } from "@2dcite/shared";
 import { requireUser } from "@/lib/session";
 import { uploadExists } from "@/lib/storage";
 import { writeAudit } from "@/lib/audit";
-import {
-  feeForTier,
-  serializeJob,
-  validateClientAcknowledgments,
-} from "@/lib/jobs";
+import { serializeJob, validateClientAcknowledgments } from "@/lib/jobs";
+import { resolveJobPricingForUser } from "@/lib/membership";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
 
 /** GET /jobs — client's jobs, or student's assigned jobs */
 export async function GET(request: Request) {
   try {
     const user = await requireUser(request);
-
+    return enterUserRls(user, async () => {
     if (user.role === "ADMIN") {
       const jobs = await prisma.job.findMany({
         orderBy: { createdAt: "desc" },
@@ -27,7 +24,7 @@ export async function GET(request: Request) {
           client: { select: { id: true, name: true, email: true, role: true } },
         },
       });
-      return jsonOk({ jobs: jobs.map(serializeJob) });
+      return jsonOk({ jobs: jobs.map((j) => serializeJob(j, user)) });
     }
 
     if (user.role === "STUDENT") {
@@ -42,7 +39,7 @@ export async function GET(request: Request) {
           client: { select: { id: true, name: true, email: true, role: true } },
         },
       });
-      return jsonOk({ jobs: jobs.map(serializeJob) });
+      return jsonOk({ jobs: jobs.map((j) => serializeJob(j, user)) });
     }
 
     if (user.role !== "ATTORNEY" && user.role !== "JUDGE") {
@@ -60,7 +57,8 @@ export async function GET(request: Request) {
         client: { select: { id: true, name: true, email: true, role: true } },
       },
     });
-    return jsonOk({ jobs: jobs.map(serializeJob) });
+    return jsonOk({ jobs: jobs.map((j) => serializeJob(j, user)) });
+    });
   } catch (err) {
     return handleRouteError(err);
   }
@@ -91,11 +89,18 @@ export async function POST(request: Request) {
       return jsonError("Invalid PDF key for this user", 400, "UPLOAD_OWNER");
     }
 
-    const fees = feeForTier(body.turnaroundTier);
+    return enterUserRls(user, async () => {
+    const isRush = body.turnaroundTier === "RUSH";
+    const { pricing } = await resolveJobPricingForUser(user.id, isRush);
     const platform =
       body.acknowledgments.platform === ClientPlatform.IOS ? "IOS" : "WEB";
 
     const job = await prisma.$transaction(async (tx) => {
+      await applyRlsConfig(tx, {
+        mode: "user",
+        userId: user.id,
+        role: user.role,
+      });
       const created = await tx.job.create({
         data: {
           clientId: user.id,
@@ -105,14 +110,16 @@ export async function POST(request: Request) {
           turnaroundTier: body.turnaroundTier,
           pdfKey: body.pdfKey,
           pdfFileName: body.pdfKey.split("/").pop() || null,
-          baseFeeCents: fees.baseFeeCents,
-          rushFeeCents: fees.rushFeeCents,
-          grossFeeCents: fees.grossCents,
-          platformFeeCents: fees.platformFeeCents,
-          studentFeeCents: fees.studentAmountCents,
+          baseFeeCents: pricing.baseFeeCents,
+          rushFeeCents: pricing.rushFeeCents,
+          grossFeeCents: pricing.grossCents,
+          platformFeeCents: pricing.platformFeeCents,
+          studentFeeCents: pricing.studentAmountCents,
+          listGrossCents: pricing.listGrossCents,
+          pricingMode: pricing.mode,
           payment: {
             create: {
-              amountCents: fees.grossCents,
+              amountCents: pricing.grossCents,
               status: "PENDING",
             },
           },
@@ -143,11 +150,14 @@ export async function POST(request: Request) {
       entityId: job.id,
       metadata: {
         turnaroundTier: body.turnaroundTier,
-        grossFeeCents: fees.grossCents,
+        grossFeeCents: pricing.grossCents,
+        listGrossCents: pricing.listGrossCents,
+        pricingMode: pricing.mode,
       },
     });
 
-    return jsonOk({ job: serializeJob(job) }, { status: 201 });
+    return jsonOk({ job: serializeJob(job, user) }, { status: 201 });
+    });
   } catch (err) {
     return handleRouteError(err);
   }

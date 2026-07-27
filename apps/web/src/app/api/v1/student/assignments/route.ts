@@ -33,8 +33,8 @@ export async function GET(request: Request) {
     return jsonOk({
       eligibleForMatching: isStudentEligibleForMatching(user),
       gateMessage: studentGateMessage(user),
-      active: active.map(serializeJob),
-      history: jobs.map(serializeJob),
+      active: active.map((j) => serializeJob(j, user)),
+      history: jobs.map((j) => serializeJob(j, user)),
     });
   } catch (err) {
     return handleRouteError(err);

@@ -2,15 +2,40 @@ import { submitReviewSchema } from "@2dcite/shared";
 import { requireRole } from "@/lib/session";
 import { submitReview } from "@/lib/review";
 import { serializeJob } from "@/lib/jobs";
-import { handleRouteError, jsonOk } from "@/lib/http";
+import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
 import { processMatchingQueue } from "@/lib/matching";
+import { clientIp, rateLimit, rateLimitPaidApi } from "@/lib/rate-limit";
 
+/**
+ * Student submits review — generates Certificate PDF and writes to Blob (paid).
+ */
 export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireRole(request, ["STUDENT"]);
+    const ip = clientIp(request);
+    const rl = await rateLimit(`review:user:${user.id}`, 30, 60 * 60 * 1000);
+    // Certificate PDF is stored via Vercel Blob
+    const blobRl = await rateLimitPaidApi("blobWrite", {
+      userId: user.id,
+      ip,
+    });
+    if (!rl.ok || !blobRl.ok) {
+      return jsonError(
+        "Too many review submissions. Try again later.",
+        429,
+        "RATE_LIMITED",
+        {
+          retryAfterSec: !rl.ok
+            ? rl.retryAfterSec
+            : !blobRl.ok
+              ? blobRl.retryAfterSec
+              : 60,
+        }
+      );
+    }
     const { id } = await context.params;
     const body = submitReviewSchema.parse(await request.json());
     const { job, review } = await submitReview(id, user.id, body);
@@ -19,7 +44,7 @@ export async function POST(
     await processMatchingQueue(5);
 
     return jsonOk({
-      job: serializeJob(job),
+      job: serializeJob(job, user),
       review: {
         id: review.id,
         submittedAt: review.submittedAt,

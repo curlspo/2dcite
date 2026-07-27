@@ -38,6 +38,22 @@ export const CONFIDENTIALITY_CORE = {
     "Review findings and any certificate are provided only to the submitting party through the platform (and platform administrators as needed to operate the service). Students must not share findings outside the platform.",
   clientSoleRiskOfUpload:
     "By uploading materials, you acknowledge that transmission and storage involve residual risk, and that 2dcite’s security measures do not create liability for unauthorized access, disclosure, or loss of confidential information beyond what applicable law non-waivably requires.",
+  /**
+   * Blind matching: student identities are never shown to attorneys/judges
+   * so reviewers can flag citation errors candidly without retaliation risk.
+   */
+  blindMatching:
+    "2dcite uses a blind matching system. Student reviewers are assigned without disclosing the student’s name, contact information, school, or other identifying details to the submitting attorney or judge. Client-facing job records and Certificates of Citation Review identify the reviewer only as an independent, qualified law-student reviewer. This protects students from retaliation after flagging citation errors and is designed so students can be completely candid without fear of retribution.",
+  blindMatchingRetention:
+    "2dcite retains student identity and review records internally so that, if a court, bar association, or other lawful authority requires production, 2dcite can produce the retained record. Retention for that purpose does not authorize disclosure of student identity to the submitting attorney or judge in the ordinary course of the service.",
+} as const;
+
+/** Intellectual property notice (product code and build) */
+export const IP_NOTICE = {
+  copyright:
+    "The 2dcite software, source code, documentation, branding, and build artifacts are protected by United States copyright law and other applicable intellectual property laws. © 2dcite. All rights reserved.",
+  noLicense:
+    "No license—express, implied, or statutory—is granted to copy, modify, distribute, reverse engineer, create derivative works of, or commercially exploit the 2dcite code, build, or related materials, except as expressly authorized in a separate written agreement signed by 2dcite. Access to the hosted service under these Terms is a limited, revocable right to use the Platform as an end user, not a software license.",
 } as const;
 
 /**
@@ -180,6 +196,13 @@ export const FULL_DISCLAIMER_SECTIONS = [
       CONFIDENTIALITY_CORE.studentConfidentiality,
       CONFIDENTIALITY_CORE.noDisclosureOfFailedCitations,
       CONFIDENTIALITY_CORE.findingsOnlyToClient,
+    ],
+  },
+  {
+    heading: "Blind matching (student identity protection)",
+    paragraphs: [
+      CONFIDENTIALITY_CORE.blindMatching,
+      CONFIDENTIALITY_CORE.blindMatchingRetention,
     ],
   },
   {

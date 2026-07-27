@@ -4,6 +4,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_APP_URL || "https://2dcite.com";
   const paths = [
     "",
+    "/about",
     "/terms",
     "/privacy",
     "/disclaimer",
@@ -15,6 +16,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${base}${p || "/"}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
-    priority: p === "" ? 1 : 0.5,
+    priority: p === "" ? 1 : p === "/about" ? 0.9 : 0.5,
   }));
 }

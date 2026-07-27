@@ -1,6 +1,5 @@
 /**
  * MVP pricing defaults (cents). Adjust via env/config later without schema changes.
- * Open items from product plan: exact amounts, platform %, rush surcharge, page cap.
  */
 
 export const PRICING_DEFAULTS = {
@@ -19,6 +18,27 @@ export const PRICING_DEFAULTS = {
   /** Minutes for student to accept before reassign */
   assignmentAcceptMinutes: 60,
 } as const;
+
+/** Monthly membership for attorneys & judges */
+export const MEMBERSHIP = {
+  /** Monthly subscription price (USD cents) */
+  monthlyCents: 9900, // $99.00
+  /** Included citation reviews per billing period (Standard or Rush) */
+  includedReviewsPerMonth: 1,
+  /**
+   * Discount on additional reviews beyond the included allotment.
+   * 1000 bps = 10% off list price.
+   */
+  additionalReviewDiscountBps: 1000,
+  /** Product label for checkout / marketing */
+  name: "2dcite Membership",
+  tagline: "1 citation check per month · 10% off additional reviews",
+} as const;
+
+export type PricingMode =
+  | "LIST"
+  | "MEMBERSHIP_INCLUDED"
+  | "MEMBERSHIP_DISCOUNT";
 
 export function computeFeeBreakdown(opts: {
   isRush: boolean;
@@ -39,5 +59,62 @@ export function computeFeeBreakdown(opts: {
     grossCents,
     platformFeeCents,
     studentAmountCents,
+  };
+}
+
+/**
+ * Client-facing job price with optional membership benefits.
+ * Student share always uses the list (non-discounted) student amount so
+ * reviewers are not underpaid; the platform absorbs free/discount cost.
+ */
+export function computeClientJobPricing(opts: {
+  isRush: boolean;
+  isActiveMember: boolean;
+  /** Reviews still available in the current membership period */
+  includedReviewsRemaining: number;
+}) {
+  const list = computeFeeBreakdown({ isRush: opts.isRush });
+
+  if (!opts.isActiveMember) {
+    return {
+      mode: "LIST" as const satisfies PricingMode,
+      baseFeeCents: list.baseFeeCents,
+      rushFeeCents: list.rushFeeCents,
+      listGrossCents: list.grossCents,
+      /** Amount the client pays */
+      grossCents: list.grossCents,
+      platformFeeCents: list.platformFeeCents,
+      studentAmountCents: list.studentAmountCents,
+      discountCents: 0,
+    };
+  }
+
+  if (opts.includedReviewsRemaining > 0) {
+    return {
+      mode: "MEMBERSHIP_INCLUDED" as const satisfies PricingMode,
+      baseFeeCents: list.baseFeeCents,
+      rushFeeCents: list.rushFeeCents,
+      listGrossCents: list.grossCents,
+      grossCents: 0,
+      // Platform subsidy: client pays $0; student still earns list student share
+      platformFeeCents: -list.studentAmountCents,
+      studentAmountCents: list.studentAmountCents,
+      discountCents: list.grossCents,
+    };
+  }
+
+  const discountBps = MEMBERSHIP.additionalReviewDiscountBps;
+  const discountCents = Math.round((list.grossCents * discountBps) / 10000);
+  const clientPay = list.grossCents - discountCents;
+
+  return {
+    mode: "MEMBERSHIP_DISCOUNT" as const satisfies PricingMode,
+    baseFeeCents: list.baseFeeCents,
+    rushFeeCents: list.rushFeeCents,
+    listGrossCents: list.grossCents,
+    grossCents: clientPay,
+    platformFeeCents: clientPay - list.studentAmountCents,
+    studentAmountCents: list.studentAmountCents,
+    discountCents,
   };
 }

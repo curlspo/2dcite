@@ -1,13 +1,15 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   CLIENT_SUBMIT_ACKNOWLEDGMENTS,
   DISCLAIMER_COPY_VERSION,
   FUNDS_HOLD_COPY,
   PRICING_DEFAULTS,
-  computeFeeBreakdown,
+  MEMBERSHIP,
+  computeClientJobPricing,
 } from "@2dcite/shared";
 import { apiFetch, BrowserApiError } from "@/lib/api-browser";
 import { DisclaimerAckPanel } from "@/components/legal/DisclaimerAckPanel";
@@ -18,6 +20,15 @@ function formatUsd(cents: number) {
     currency: "USD",
   }).format(cents / 100);
 }
+
+type MembershipPayload = {
+  membership: {
+    isActive: boolean;
+    includedReviewsRemaining: number;
+    includedReviewsUsed: number;
+    includedReviewsPerMonth: number;
+  };
+};
 
 export function NewJobForm() {
   const router = useRouter();
@@ -30,11 +41,24 @@ export function NewJobForm() {
   const [disclaimerRead, setDisclaimerRead] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const fees = useMemo(
-    () => computeFeeBreakdown({ isRush: tier === "RUSH" }),
-    [tier]
+  const [member, setMember] = useState<MembershipPayload["membership"] | null>(
+    null
   );
+
+  useEffect(() => {
+    apiFetch<MembershipPayload>("/membership/checkout")
+      .then((res) => setMember(res.membership))
+      .catch(() => setMember(null));
+  }, []);
+
+  const fees = useMemo(() => {
+    const isRush = tier === "RUSH";
+    return computeClientJobPricing({
+      isRush,
+      isActiveMember: Boolean(member?.isActive),
+      includedReviewsRemaining: member?.includedReviewsRemaining ?? 0,
+    });
+  }, [tier, member]);
 
   const allAcked =
     disclaimerRead &&
@@ -97,6 +121,7 @@ export function NewJobForm() {
         return;
       }
 
+      // membership_included, dev_mock, etc.
       router.push(`/jobs/${created.job.id}?paid=1`);
       router.refresh();
     } catch (err) {
@@ -105,6 +130,13 @@ export function NewJobForm() {
       setLoading(false);
     }
   }
+
+  const submitLabel =
+    fees.mode === "MEMBERSHIP_INCLUDED"
+      ? "Use included membership review"
+      : fees.grossCents === 0
+        ? "Submit"
+        : `Pay ${formatUsd(fees.grossCents)} & submit`;
 
   return (
     <form
@@ -120,6 +152,26 @@ export function NewJobForm() {
         >
           {error}
         </div>
+      )}
+
+      {member?.isActive && (
+        <div className="rounded-lg border border-accent/30 bg-accent-soft/50 px-4 py-3 text-sm text-muted">
+          <p className="font-medium text-ink">Membership active</p>
+          <p className="mt-1">
+            {member.includedReviewsRemaining > 0
+              ? `${member.includedReviewsRemaining} included review remaining this period — applied automatically.`
+              : `Included allotment used. Additional reviews are ${MEMBERSHIP.additionalReviewDiscountBps / 100}% off list price.`}
+          </p>
+        </div>
+      )}
+
+      {!member?.isActive && member !== null && (
+        <p className="text-sm text-muted">
+          Want 1 included review/month + 10% off extras?{" "}
+          <Link href="/membership" className="text-accent underline">
+            View membership
+          </Link>
+        </p>
       )}
 
       <div className="block text-sm">
@@ -152,57 +204,74 @@ export function NewJobForm() {
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-ink">Turnaround</legend>
-        <label
-          className={`flex min-h-11 cursor-pointer justify-between rounded-xl border p-3 ${
-            tier === "STANDARD_48H"
-              ? "border-accent bg-accent-soft"
-              : "border-border bg-card"
-          }`}
-        >
-          <span className="flex gap-2">
-            <input
-              type="radio"
-              name="tier"
-              checked={tier === "STANDARD_48H"}
-              onChange={() => setTier("STANDARD_48H")}
-            />
-            <span>
-              <span className="font-medium text-ink">Standard</span>
-              <span className="block text-xs text-muted">
-                {PRICING_DEFAULTS.standardSlaHours} hours after student accepts
+        {(
+          [
+            {
+              id: "STANDARD_48H" as const,
+              label: "Standard",
+              hours: PRICING_DEFAULTS.standardSlaHours,
+              note: "hours after student accepts",
+              isRush: false,
+            },
+            {
+              id: "RUSH" as const,
+              label: "Rush",
+              hours: PRICING_DEFAULTS.rushSlaHours,
+              note: "hours after student accepts · priority queue",
+              isRush: true,
+            },
+          ] as const
+        ).map((opt) => {
+          const p = computeClientJobPricing({
+            isRush: opt.isRush,
+            isActiveMember: Boolean(member?.isActive),
+            includedReviewsRemaining: member?.includedReviewsRemaining ?? 0,
+          });
+          return (
+            <label
+              key={opt.id}
+              className={`flex min-h-11 cursor-pointer justify-between rounded-xl border p-3 ${
+                tier === opt.id
+                  ? "border-accent bg-accent-soft"
+                  : "border-border bg-card"
+              }`}
+            >
+              <span className="flex gap-2">
+                <input
+                  type="radio"
+                  name="tier"
+                  checked={tier === opt.id}
+                  onChange={() => setTier(opt.id)}
+                />
+                <span>
+                  <span className="font-medium text-ink">{opt.label}</span>
+                  <span className="block text-xs text-muted">
+                    {opt.hours} {opt.note}
+                  </span>
+                </span>
               </span>
-            </span>
-          </span>
-          <span className="font-medium text-ink">
-            {formatUsd(computeFeeBreakdown({ isRush: false }).grossCents)}
-          </span>
-        </label>
-        <label
-          className={`flex min-h-11 cursor-pointer justify-between rounded-xl border p-3 ${
-            tier === "RUSH"
-              ? "border-accent bg-accent-soft"
-              : "border-border bg-card"
-          }`}
-        >
-          <span className="flex gap-2">
-            <input
-              type="radio"
-              name="tier"
-              checked={tier === "RUSH"}
-              onChange={() => setTier("RUSH")}
-            />
-            <span>
-              <span className="font-medium text-ink">Rush</span>
-              <span className="block text-xs text-muted">
-                {PRICING_DEFAULTS.rushSlaHours} hours after student accepts ·
-                priority queue
+              <span className="text-right font-medium text-ink">
+                {p.mode === "MEMBERSHIP_INCLUDED" ? (
+                  <>
+                    <span className="block text-xs font-normal text-muted line-through">
+                      {formatUsd(p.listGrossCents)}
+                    </span>
+                    Included
+                  </>
+                ) : p.mode === "MEMBERSHIP_DISCOUNT" ? (
+                  <>
+                    <span className="block text-xs font-normal text-muted line-through">
+                      {formatUsd(p.listGrossCents)}
+                    </span>
+                    {formatUsd(p.grossCents)}
+                  </>
+                ) : (
+                  formatUsd(p.grossCents)
+                )}
               </span>
-            </span>
-          </span>
-          <span className="font-medium text-ink">
-            {formatUsd(computeFeeBreakdown({ isRush: true }).grossCents)}
-          </span>
-        </label>
+            </label>
+          );
+        })}
       </fieldset>
 
       <div className="block text-sm">
@@ -259,18 +328,33 @@ export function NewJobForm() {
 
       <div className="rounded-xl border border-gold/30 bg-accent-soft/40 p-4 text-sm text-muted">
         <p className="font-medium text-ink">Payment & hold</p>
-        <p className="mt-1">{FUNDS_HOLD_COPY.clientPayOnUpload}</p>
-        <p className="mt-1">{FUNDS_HOLD_COPY.releaseOnCertificate}</p>
-        <p className="mt-1">
-          {FUNDS_HOLD_COPY.chargedOnSubmitRefundIfUnfulfilled}
-        </p>
+        {fees.mode === "MEMBERSHIP_INCLUDED" ? (
+          <p className="mt-1">
+            This review uses your included membership allotment — no charge to
+            your card. The student share is still funded by the platform and
+            held until the Certificate is issued.
+          </p>
+        ) : (
+          <>
+            <p className="mt-1">{FUNDS_HOLD_COPY.clientPayOnUpload}</p>
+            <p className="mt-1">{FUNDS_HOLD_COPY.releaseOnCertificate}</p>
+            <p className="mt-1">
+              {FUNDS_HOLD_COPY.chargedOnSubmitRefundIfUnfulfilled}
+            </p>
+          </>
+        )}
         <p className="mt-3 text-ink">
           Total due now: <strong>{formatUsd(fees.grossCents)}</strong>
-          <span className="text-muted">
-            {" "}
-            (platform fee {formatUsd(fees.platformFeeCents)} · student share{" "}
-            {formatUsd(fees.studentAmountCents)} held until certificate)
-          </span>
+          {fees.mode !== "LIST" && fees.listGrossCents > fees.grossCents && (
+            <span className="ml-2 text-sm font-normal text-muted line-through">
+              {formatUsd(fees.listGrossCents)}
+            </span>
+          )}
+          {fees.mode === "MEMBERSHIP_DISCOUNT" && (
+            <span className="ml-2 text-sm font-normal text-muted">
+              (member 10% off)
+            </span>
+          )}
         </p>
       </div>
 
@@ -281,7 +365,7 @@ export function NewJobForm() {
         className="btn-primary w-full sm:w-auto"
         style={{ color: "#ffffff", backgroundColor: "#16325c" }}
       >
-        {loading ? "Processing…" : `Pay ${formatUsd(fees.grossCents)} & submit`}
+        {loading ? "Processing…" : submitLabel}
       </button>
     </form>
   );

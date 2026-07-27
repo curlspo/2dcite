@@ -1,4 +1,5 @@
-import { prisma } from "@2dcite/db";
+import "server-only";
+import { prisma, enterBypassRls, enterUserRls } from "@2dcite/db";
 import {
   findNextAvailableStudent,
   findNextQueuedJob,
@@ -10,13 +11,21 @@ import { writeAudit } from "@/lib/audit";
 /**
  * Assign a single QUEUED job to an available approved student.
  * Returns assigned job or null if no job/student available.
+ * System path: RLS bypass (cross-tenant matching).
  */
 export async function assignJobIfPossible(
   jobId?: string,
   excludeUserIds: string[] = []
 ) {
+  return enterBypassRls(async () => assignJobIfPossibleInner(jobId, excludeUserIds));
+}
+
+async function assignJobIfPossibleInner(
+  jobId?: string,
+  excludeUserIds: string[] = []
+) {
   // Expire stale assignments first
-  await reassignTimedOutAssignments();
+  await reassignTimedOutAssignmentsInner();
 
   const job = jobId
     ? await prisma.job.findUnique({ where: { id: jobId } })
@@ -74,6 +83,10 @@ export async function processMatchingQueue(limit = 20) {
  * ASSIGNED jobs past accept window → clear student, back to QUEUED, try reassign.
  */
 export async function reassignTimedOutAssignments() {
+  return enterBypassRls(() => reassignTimedOutAssignmentsInner());
+}
+
+async function reassignTimedOutAssignmentsInner() {
   const { ASSIGNMENT_ACCEPT_MINUTES } = await import("@2dcite/db");
   const cutoff = new Date();
   cutoff.setMinutes(cutoff.getMinutes() - ASSIGNMENT_ACCEPT_MINUTES);
@@ -108,8 +121,11 @@ export async function reassignTimedOutAssignments() {
 }
 
 export async function acceptAssignment(jobId: string, studentId: string) {
+  // Timeout cleanup is system-wide
   await reassignTimedOutAssignments();
 
+  // Student-scoped work under RLS
+  return enterUserRls({ id: studentId, role: "STUDENT" }, async () => {
   const job = await prisma.job.findUnique({ where: { id: jobId } });
   if (!job) {
     throw Object.assign(new Error("Job not found"), { status: 404 });
@@ -170,9 +186,11 @@ export async function acceptAssignment(jobId: string, studentId: string) {
   });
 
   return updated;
+  });
 }
 
 export async function declineAssignment(jobId: string, studentId: string) {
+  return enterUserRls({ id: studentId, role: "STUDENT" }, async () => {
   const job = await prisma.job.findUnique({ where: { id: jobId } });
   if (!job) {
     throw Object.assign(new Error("Job not found"), { status: 404 });
@@ -203,7 +221,8 @@ export async function declineAssignment(jobId: string, studentId: string) {
     entityId: jobId,
   });
 
-  // Do not immediately re-assign the student who just declined
+  // Re-assign uses system bypass (other students)
   const reassigned = await assignJobIfPossible(jobId, [studentId]);
   return reassigned;
+  });
 }

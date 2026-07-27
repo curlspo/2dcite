@@ -1,23 +1,15 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma as rawPrisma } from "./client";
+import { createRlsPrismaClient } from "./rls";
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+/**
+ * Default DB client: every query runs under RLS transaction context
+ * (user / bypass / deny from AsyncLocalStorage — see rls.ts).
+ */
+export const prisma = createRlsPrismaClient(rawPrisma);
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["error", "warn"]
-        : ["error"],
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
-
-export { PrismaClient };
+/** Unwrapped client for rare cases (migrations helpers). Prefer prisma. */
+export { rawPrisma };
+export { PrismaClient } from "@prisma/client";
 export * from "@prisma/client";
 export {
   findNextAvailableStudent,
@@ -26,3 +18,18 @@ export {
   reviewDueAt,
   ASSIGNMENT_ACCEPT_MINUTES,
 } from "./matching";
+export {
+  applyRlsConfig,
+  createRlsPrismaClient,
+  enterBypassRls,
+  enterRlsContext,
+  enterUserRls,
+  getRlsContext,
+  rlsPrisma,
+  runWithBypassRls,
+  runWithRls,
+  runWithUserRls,
+  type RlsContext,
+  type RlsPrisma,
+  type Tx,
+} from "./rls";

@@ -1,9 +1,13 @@
-import type { PrismaClient, User } from "@prisma/client";
+import type { User } from "@prisma/client";
 
 /** Defaults mirrored from @2dcite/shared PRICING_DEFAULTS (keep in sync). */
 const ASSIGNMENT_ACCEPT_MINUTES = 60;
 const STANDARD_SLA_HOURS = 48;
 const RUSH_SLA_HOURS = 24;
+
+/** Accept base or RLS-extended Prisma client. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DbClient = any;
 
 /**
  * Students eligible for auto-assign:
@@ -11,7 +15,7 @@ const RUSH_SLA_HOURS = 24;
  * - zero active jobs (ASSIGNED or IN_REVIEW)
  */
 export async function findNextAvailableStudent(
-  prisma: PrismaClient,
+  prisma: DbClient,
   excludeUserIds: string[] = []
 ): Promise<User | null> {
   const candidates = await prisma.studentProfile.findMany({
@@ -45,7 +49,7 @@ export async function findNextAvailableStudent(
 }
 
 /** Next QUEUED job: rush first, then oldest. */
-export async function findNextQueuedJob(prisma: PrismaClient) {
+export async function findNextQueuedJob(prisma: DbClient) {
   const rush = await prisma.job.findFirst({
     where: { status: "QUEUED", turnaroundTier: "RUSH", studentId: null },
     orderBy: { createdAt: "asc" },

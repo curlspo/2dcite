@@ -1,3 +1,4 @@
+import "server-only";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { randomBytes } from "crypto";
 import {
@@ -5,7 +6,7 @@ import {
   DISCLAIMER_COPY_VERSION,
   FUNDS_HOLD_COPY,
 } from "@2dcite/shared";
-import { prisma } from "@2dcite/db";
+import { prisma, applyRlsConfig, enterBypassRls } from "@2dcite/db";
 import { saveUpload } from "@/lib/storage";
 import { writeAudit } from "@/lib/audit";
 
@@ -135,13 +136,16 @@ export async function renderCertificatePdf(
     { size: 9, color: muted, gap: 8 }
   );
 
-  draw("Student reviewer", { size: 10, bold: true, gap: 2 });
-  const school = job.student?.studentProfile?.lawSchool;
+  // Blind matching: client-facing certificate never names the student.
+  // Identity is retained in platform records for court/bar process only.
+  draw("Independent student reviewer", { size: 10, bold: true, gap: 2 });
   draw(
-    job.student
-      ? `${job.student.name}${school ? ` · ${school}` : ""}`
-      : "—",
+    "Qualified 2L/3L law-student reviewer (identity withheld under 2dcite blind-matching policy to protect candid review without retaliation).",
     { size: 9, color: muted, gap: 2 }
+  );
+  draw(
+    "Reviewer identity is retained by 2dcite for production to a court, bar association, or other lawful authority if required—not disclosed to the submitting party in ordinary use.",
+    { size: 8, color: muted, gap: 2 }
   );
   if (job.review?.submittedAt) {
     draw(
@@ -257,6 +261,10 @@ export async function renderCertificatePdf(
  * Idempotent if already certified.
  */
 export async function issueCertificateAndReleaseFunds(jobId: string) {
+  return enterBypassRls(() => issueCertificateAndReleaseFundsInner(jobId));
+}
+
+async function issueCertificateAndReleaseFundsInner(jobId: string) {
   const existing = await prisma.job.findUnique({
     where: { id: jobId },
     include: {
@@ -315,6 +323,7 @@ export async function issueCertificateAndReleaseFunds(jobId: string) {
   }
 
   const result = await prisma.$transaction(async (tx) => {
+    await applyRlsConfig(tx, { mode: "bypass", reason: "certificate" });
     const again = await tx.certificate.findUnique({ where: { jobId } });
     if (!again) {
       await tx.certificate.create({

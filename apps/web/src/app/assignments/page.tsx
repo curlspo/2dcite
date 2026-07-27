@@ -61,7 +61,7 @@ export default async function AssignmentsPage() {
         ) : (
           <ul className="mt-3 space-y-4">
             {active.map((j) => {
-              const job = serializeJob(j);
+              const job = serializeJob(j, user);
               return (
                 <li
                   key={j.id}

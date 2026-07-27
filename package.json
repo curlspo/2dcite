@@ -15,6 +15,7 @@
     "db:studio": "pnpm --filter @2dcite/db studio",
     "db:seed": "pnpm --filter @2dcite/db seed",
     "check:prod-env": "node scripts/check-production-env.mjs",
+    "check:client-secrets": "node scripts/assert-no-client-secrets.mjs",
     "deploy:prod": "cd apps/web && vercel --prod",
     "deploy:preview": "cd apps/web && vercel"
   },

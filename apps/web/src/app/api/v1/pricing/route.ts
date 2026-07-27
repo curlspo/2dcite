@@ -1,6 +1,8 @@
 import {
   PRICING_DEFAULTS,
+  MEMBERSHIP,
   computeFeeBreakdown,
+  computeClientJobPricing,
   FUNDS_HOLD_COPY,
   CLIENT_SUBMIT_ACKNOWLEDGMENTS,
   DISCLAIMER_COPY_VERSION,
@@ -12,6 +14,16 @@ import { stripeEnabled } from "@/lib/payments";
 export async function GET() {
   const standard = computeFeeBreakdown({ isRush: false });
   const rush = computeFeeBreakdown({ isRush: true });
+  const memberStandard = computeClientJobPricing({
+    isRush: false,
+    isActiveMember: true,
+    includedReviewsRemaining: 0,
+  });
+  const memberRush = computeClientJobPricing({
+    isRush: true,
+    isActiveMember: true,
+    includedReviewsRemaining: 0,
+  });
 
   return jsonOk({
     currency: "USD",
@@ -33,6 +45,30 @@ export async function GET() {
         ...rush,
         display: formatUsd(rush.grossCents),
         label: `Rush (${PRICING_DEFAULTS.rushSlaHours}h)`,
+      },
+    },
+    membership: {
+      name: MEMBERSHIP.name,
+      tagline: MEMBERSHIP.tagline,
+      monthlyCents: MEMBERSHIP.monthlyCents,
+      monthlyDisplay: formatUsd(MEMBERSHIP.monthlyCents),
+      includedReviewsPerMonth: MEMBERSHIP.includedReviewsPerMonth,
+      additionalReviewDiscountBps: MEMBERSHIP.additionalReviewDiscountBps,
+      additionalReviewDiscountPercent:
+        MEMBERSHIP.additionalReviewDiscountBps / 100,
+      memberPrices: {
+        STANDARD_48H: {
+          listGrossCents: memberStandard.listGrossCents,
+          memberGrossCents: memberStandard.grossCents,
+          display: formatUsd(memberStandard.grossCents),
+          listDisplay: formatUsd(memberStandard.listGrossCents),
+        },
+        RUSH: {
+          listGrossCents: memberRush.listGrossCents,
+          memberGrossCents: memberRush.grossCents,
+          display: formatUsd(memberRush.grossCents),
+          listDisplay: formatUsd(memberRush.listGrossCents),
+        },
       },
     },
   });

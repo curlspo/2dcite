@@ -1,12 +1,29 @@
+import "server-only";
 import { createHash, randomBytes } from "crypto";
 import { cookies } from "next/headers";
-import { prisma, type User, type StudentProfile, type UserRole } from "@2dcite/db";
+import {
+  prisma,
+  enterBypassRls,
+  enterUserRls,
+  type User,
+  type StudentProfile,
+  type UserRole,
+  type Session,
+} from "@2dcite/db";
 
 export const SESSION_COOKIE = "2dcite_session";
 const SESSION_DAYS = 30;
+/** How long step-up elevation lasts after TOTP re-auth */
+export const STEP_UP_MINUTES = 15;
 
 export type SessionUser = User & {
   studentProfile: StudentProfile | null;
+};
+
+export type SessionContext = {
+  user: SessionUser;
+  session: Session;
+  token: string;
 };
 
 export function hashToken(token: string): string {
@@ -17,7 +34,10 @@ export function generateSessionToken(): string {
   return randomBytes(32).toString("hex");
 }
 
-export async function createSession(userId: string): Promise<{
+export async function createSession(
+  userId: string,
+  opts?: { mfaVerified?: boolean }
+): Promise<{
   token: string;
   expiresAt: Date;
 }> {
@@ -25,42 +45,63 @@ export async function createSession(userId: string): Promise<{
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + SESSION_DAYS);
 
-  await prisma.session.create({
-    data: {
-      userId,
-      token: hashToken(token),
-      expiresAt,
-    },
+  await enterBypassRls(async () => {
+    await prisma.session.create({
+      data: {
+        userId,
+        token: hashToken(token),
+        expiresAt,
+        mfaVerifiedAt: opts?.mfaVerified ? new Date() : null,
+      },
+    });
   });
 
   return { token, expiresAt };
 }
 
 export async function deleteSessionByToken(token: string): Promise<void> {
-  await prisma.session.deleteMany({
-    where: { token: hashToken(token) },
+  await enterBypassRls(async () => {
+    await prisma.session.deleteMany({
+      where: { token: hashToken(token) },
+    });
   });
+}
+
+export async function getSessionByToken(
+  token: string | null | undefined
+): Promise<SessionContext | null> {
+  if (!token) return null;
+
+  // Session lookup is pre-auth; use bypass then switch to user context for work
+  const session = await enterBypassRls(() =>
+    prisma.session.findUnique({
+      where: { token: hashToken(token) },
+      include: {
+        user: { include: { studentProfile: true } },
+      },
+    })
+  );
+
+  if (!session) return null;
+  if (session.expiresAt < new Date()) {
+    await enterBypassRls(async () => {
+      await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
+    });
+    return null;
+  }
+
+  return {
+    user: session.user,
+    session,
+    token,
+  };
 }
 
 export async function getUserByToken(
   token: string | null | undefined
 ): Promise<SessionUser | null> {
-  if (!token) return null;
-
-  const session = await prisma.session.findUnique({
-    where: { token: hashToken(token) },
-    include: {
-      user: { include: { studentProfile: true } },
-    },
-  });
-
-  if (!session) return null;
-  if (session.expiresAt < new Date()) {
-    await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
-    return null;
-  }
-
-  return session.user;
+  const ctx = await getSessionByToken(token);
+  return ctx?.user ?? null;
 }
 
 export function extractBearerToken(request: Request): string | null {
@@ -84,52 +125,190 @@ export async function getTokenFromRequest(
 }
 
 export async function requireUser(request: Request): Promise<SessionUser> {
+  const ctx = await requireSession(request);
+  return ctx.user;
+}
+
+export async function requireSession(request: Request): Promise<SessionContext> {
   const token = await getTokenFromRequest(request);
-  const user = await getUserByToken(token);
-  if (!user) {
+  const ctx = await getSessionByToken(token);
+  if (!ctx) {
     const err = new Error("Unauthorized") as Error & { status: number };
     err.status = 401;
     throw err;
   }
-  return user;
+  return ctx;
 }
 
+/**
+ * Require role. For ADMIN:
+ * - If MFA is enabled, session must have mfaVerifiedAt
+ * - If MFA is not enabled, allow access only to MFA setup paths (caller enforces)
+ */
 export async function requireRole(
   request: Request,
   roles: UserRole[]
 ): Promise<SessionUser> {
-  const user = await requireUser(request);
-  if (!roles.includes(user.role)) {
+  const ctx = await requireSession(request);
+  if (!roles.includes(ctx.user.role)) {
     const err = new Error("Forbidden") as Error & { status: number };
     err.status = 403;
     throw err;
   }
-  return user;
+
+  if (ctx.user.role === "ADMIN" && roles.includes("ADMIN")) {
+    await assertAdminMfaSatisfied(ctx);
+  }
+
+  return ctx.user;
 }
 
-/** Server Components / Server Actions: read session cookie */
+/** Admin must complete MFA when enabled. */
+export async function assertAdminMfaSatisfied(
+  ctx: SessionContext
+): Promise<void> {
+  if (ctx.user.role !== "ADMIN") return;
+  if (!ctx.user.mfaEnabled) return;
+  if (ctx.session.mfaVerifiedAt) return;
+  const err = new Error("MFA required") as Error & {
+    status: number;
+    code?: string;
+  };
+  err.status = 403;
+  err.code = "MFA_REQUIRED";
+  throw err;
+}
+
+/**
+ * Sensitive admin ops require recent step-up TOTP (or MFA just verified).
+ */
+export async function requireAdminStepUp(
+  request: Request
+): Promise<SessionContext> {
+  const ctx = await requireSession(request);
+  if (ctx.user.role !== "ADMIN") {
+    const err = new Error("Forbidden") as Error & { status: number };
+    err.status = 403;
+    throw err;
+  }
+  await assertAdminMfaSatisfied(ctx);
+
+  // If MFA not yet enabled, force setup before step-up ops
+  if (!ctx.user.mfaEnabled) {
+    const err = new Error("MFA setup required") as Error & {
+      status: number;
+      code?: string;
+    };
+    err.status = 403;
+    err.code = "MFA_SETUP_REQUIRED";
+    throw err;
+  }
+
+  const now = new Date();
+  const elevated =
+    (ctx.session.stepUpUntil && ctx.session.stepUpUntil > now) ||
+    (ctx.session.mfaVerifiedAt &&
+      now.getTime() - ctx.session.mfaVerifiedAt.getTime() < 2 * 60 * 1000);
+
+  if (!elevated) {
+    const err = new Error("Step-up authentication required") as Error & {
+      status: number;
+      code?: string;
+    };
+    err.status = 403;
+    err.code = "STEP_UP_REQUIRED";
+    throw err;
+  }
+
+  return ctx;
+}
+
+export async function markSessionMfaVerified(sessionId: string): Promise<void> {
+  const stepUp = new Date();
+  stepUp.setMinutes(stepUp.getMinutes() + STEP_UP_MINUTES);
+  await enterBypassRls(async () => {
+    await prisma.session.update({
+      where: { id: sessionId },
+      data: {
+        mfaVerifiedAt: new Date(),
+        stepUpUntil: stepUp,
+      },
+    });
+  });
+}
+
+export async function markSessionStepUp(sessionId: string): Promise<void> {
+  const stepUp = new Date();
+  stepUp.setMinutes(stepUp.getMinutes() + STEP_UP_MINUTES);
+  await enterBypassRls(async () => {
+    await prisma.session.update({
+      where: { id: sessionId },
+      data: { stepUpUntil: stepUp },
+    });
+  });
+}
+
+/**
+ * Run authenticated request work under this user's RLS policies.
+ * Prefer for route handlers and server pages after identity is known.
+ */
+export async function asUser<T>(
+  user: { id: string; role: string },
+  fn: () => Promise<T>
+): Promise<T> {
+  return enterUserRls(user, fn);
+}
+
+/** Server Components: read session cookie */
 export async function getSessionUserFromCookies(): Promise<SessionUser | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   return getUserByToken(token ?? null);
 }
 
-export function sessionCookieOptions(expiresAt: Date) {
+export async function getSessionContextFromCookies(): Promise<SessionContext | null> {
+  const jar = await cookies();
+  const token = jar.get(SESSION_COOKIE)?.value;
+  return getSessionByToken(token ?? null);
+}
+
+/** OWASP session cookie flags */
+export function sessionCookieOptions(expiresAt?: Date) {
+  const secure =
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production";
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure,
     sameSite: "lax" as const,
     path: "/",
-    expires: expiresAt,
+    ...(expiresAt ? { expires: expiresAt } : { maxAge: 0 }),
   };
 }
 
-export function toMeResponse(user: SessionUser) {
+export function clearSessionCookieOptions() {
+  return {
+    ...sessionCookieOptions(),
+    maxAge: 0,
+    expires: new Date(0),
+  };
+}
+
+export function toMeResponse(
+  user: SessionUser,
+  session?: Session | null
+) {
   return {
     id: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
+    mfaEnabled: user.mfaEnabled,
+    mfaVerified: Boolean(session?.mfaVerifiedAt) || user.role !== "ADMIN",
+    mfaSetupRequired: user.role === "ADMIN" && !user.mfaEnabled,
+    stepUpActive: Boolean(
+      session?.stepUpUntil && session.stepUpUntil > new Date()
+    ),
     studentStatus: user.studentProfile?.status ?? null,
     studentProfile: user.studentProfile
       ? {

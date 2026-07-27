@@ -18,6 +18,7 @@ export function AppShell({
           { href: "/admin/jobs", label: "Jobs" },
           { href: "/admin/payouts", label: "Payouts" },
           { href: "/admin/audit", label: "Audit" },
+          { href: "/admin/mfa", label: "MFA" },
         ]
       : user.role === "STUDENT"
         ? [
@@ -29,6 +30,7 @@ export function AppShell({
             { href: "/dashboard", label: "Home" },
             { href: "/jobs", label: "Jobs" },
             { href: "/jobs/new", label: "New review" },
+            { href: "/membership", label: "Membership" },
           ];
 
   return (

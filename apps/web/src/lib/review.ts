@@ -1,4 +1,5 @@
-import { prisma, type Prisma } from "@2dcite/db";
+import "server-only";
+import { prisma, applyRlsConfig, enterUserRls, type Prisma } from "@2dcite/db";
 import {
   DISCLAIMER_COPY_VERSION,
   STUDENT_REVIEW_ATTESTATION,
@@ -16,6 +17,7 @@ export async function submitReview(
   studentId: string,
   body: SubmitReviewBody
 ) {
+  return enterUserRls({ id: studentId, role: "STUDENT" }, async () => {
   if (body.disclaimerCopyVersion !== DISCLAIMER_COPY_VERSION) {
     throw Object.assign(
       new Error(
@@ -52,6 +54,11 @@ export async function submitReview(
   const platform = body.platform === "IOS" ? "IOS" : "WEB";
 
   await prisma.$transaction(async (tx) => {
+    await applyRlsConfig(tx, {
+      mode: "user",
+      userId: studentId,
+      role: "STUDENT",
+    });
     await tx.review.create({
       data: {
         jobId,
@@ -86,7 +93,7 @@ export async function submitReview(
     });
   });
 
-  // Certificate + release student share (outside short review tx; PDF generation)
+  // Certificate + release (system path; may touch payouts/admin fields)
   const certified = await issueCertificateAndReleaseFunds(jobId);
 
   return {
@@ -94,4 +101,5 @@ export async function submitReview(
     review: await prisma.review.findUniqueOrThrow({ where: { jobId } }),
     certificate: certified.certificate,
   };
+  });
 }

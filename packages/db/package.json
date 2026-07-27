@@ -14,14 +14,18 @@
     "migrate": "prisma migrate dev",
     "studio": "prisma studio",
     "build": "prisma generate",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/seed.ts",
+    "rls:apply": "node scripts/apply-rls.mjs",
+    "rls:verify": "node scripts/verify-rls.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",
-    "bcryptjs": "^3.0.2"
+    "bcryptjs": "^3.0.2",
+    "pg": "^8.16.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.15.4",
     "prisma": "^6.11.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"

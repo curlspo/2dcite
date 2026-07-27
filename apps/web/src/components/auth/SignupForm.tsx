@@ -2,19 +2,23 @@
 
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isEduEmail } from "@2dcite/shared";
+import { isEduEmail, US_STATES } from "@2dcite/shared";
 import { apiFetch, BrowserApiError } from "@/lib/api-browser";
+import {
+  TurnstileWidget,
+  resetTurnstile,
+} from "@/components/captcha/TurnstileWidget";
 
 const ROLES = [
   {
     value: "ATTORNEY",
     label: "Attorney",
-    desc: "Submit briefs for citation review — bar number required",
+    desc: "Submit briefs for citation review — state + bar number required",
   },
   {
     value: "JUDGE",
     label: "Judge",
-    desc: "Submit orders for citation review — license/bar number required",
+    desc: "Submit orders for citation review — state + license/bar number required",
   },
   {
     value: "STUDENT",
@@ -34,8 +38,10 @@ export function SignupForm({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [barState, setBarState] = useState("");
   const [barNumber, setBarNumber] = useState("");
   const [role, setRole] = useState<string>(initialRole);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -52,10 +58,20 @@ export function SignupForm({
       );
       return;
     }
+    if (needsBar && !barState) {
+      setError(
+        "Select the state where your bar or judicial license is issued."
+      );
+      return;
+    }
     if (needsBar && !barNumber.trim()) {
       setError(
         "Attorneys and judges must provide a state bar or judicial license number."
       );
+      return;
+    }
+    if (!captchaToken) {
+      setError("Please complete the security check and try again.");
       return;
     }
 
@@ -68,7 +84,10 @@ export function SignupForm({
           email,
           password,
           role,
-          ...(needsBar ? { barNumber: barNumber.trim() } : {}),
+          captchaToken,
+          ...(needsBar
+            ? { barState, barNumber: barNumber.trim() }
+            : {}),
         }),
       });
       if (data.user.role === "STUDENT") {
@@ -81,6 +100,8 @@ export function SignupForm({
       setError(
         err instanceof BrowserApiError ? err.message : "Sign up failed"
       );
+      setCaptchaToken(null);
+      resetTurnstile();
     } finally {
       setLoading(false);
     }
@@ -164,30 +185,59 @@ export function SignupForm({
         )}
       </div>
       {needsBar && (
-        <div className="block text-sm">
-          <label htmlFor="signup-bar" className="font-medium text-ink">
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium text-ink">
             {role === "JUDGE"
-              ? "Judicial license / bar number"
-              : "State bar number"}
-          </label>
-          <input
-            id="signup-bar"
-            name="barNumber"
-            required
-            autoComplete="off"
-            value={barNumber}
-            onChange={(e) => setBarNumber(e.target.value)}
-            placeholder={
-              role === "JUDGE" ? "License or bar number" : "e.g. 123456"
-            }
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 text-ink"
-            aria-describedby="signup-bar-hint"
-          />
-          <p id="signup-bar-hint" className="mt-1 text-xs text-muted">
-            Required to create an attorney or judge account. Used to reduce
-            spam and verify professional status.
+              ? "Judicial license"
+              : "State bar credentials"}
+          </legend>
+          <div className="block text-sm">
+            <label htmlFor="signup-bar-state" className="font-medium text-ink">
+              State / jurisdiction
+            </label>
+            <select
+              id="signup-bar-state"
+              name="barState"
+              required
+              value={barState}
+              onChange={(e) => setBarState(e.target.value)}
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 text-ink"
+              aria-describedby="signup-bar-hint"
+            >
+              <option value="">Select state…</option>
+              {US_STATES.map((s) => (
+                <option key={s.code} value={s.code}>
+                  {s.code} — {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="block text-sm">
+            <label htmlFor="signup-bar" className="font-medium text-ink">
+              {role === "JUDGE"
+                ? "License / bar number"
+                : "Bar number"}
+            </label>
+            <input
+              id="signup-bar"
+              name="barNumber"
+              required
+              autoComplete="off"
+              value={barNumber}
+              onChange={(e) => setBarNumber(e.target.value)}
+              placeholder={
+                role === "JUDGE" ? "License or bar number" : "e.g. 123456"
+              }
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 text-ink"
+              aria-describedby="signup-bar-hint"
+            />
+          </div>
+          <p id="signup-bar-hint" className="text-xs text-muted">
+            Bar and judicial license numbers are state-specific. Select the
+            issuing state, then enter the number. Used to reduce spam and
+            verify professional status.
           </p>
-        </div>
+        </fieldset>
       )}
       <div className="block text-sm">
         <label htmlFor="signup-password" className="font-medium text-ink">
@@ -209,9 +259,10 @@ export function SignupForm({
           Use at least 10 characters.
         </p>
       </div>
+      <TurnstileWidget onToken={setCaptchaToken} />
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || !captchaToken}
         aria-busy={loading}
         className="btn-primary w-full"
         style={{ color: "#ffffff", backgroundColor: "#16325c" }}

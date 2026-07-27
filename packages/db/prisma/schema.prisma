@@ -67,32 +67,73 @@ enum ClientPlatform {
   IOS
 }
 
+enum MembershipStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+/// How a job was priced for the client (list vs membership benefits).
+enum PricingMode {
+  LIST
+  MEMBERSHIP_INCLUDED
+  MEMBERSHIP_DISCOUNT
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
   passwordHash String?
   name         String
   role         UserRole
+  /** Admin MFA (TOTP) enabled */
+  mfaEnabled   Boolean   @default(false)
+  /** AES-GCM encrypted TOTP secret (never return to clients) */
+  mfaSecretEnc String?
+  /** JSON array of bcrypt hashes of one-time backup codes */
+  mfaBackupCodesJson String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   studentProfile StudentProfile?
   clientProfile  ClientProfile?
+  membership     Membership?
   deviceTokens   DeviceToken[]
   jobsAsClient   Job[]            @relation("ClientJobs")
   jobsAsStudent  Job[]            @relation("StudentJobs")
   acknowledgments LiabilityAcknowledgment[]
   auditLogs      AuditLog[]
   sessions       Session[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+/// One-time password reset tokens (store only SHA-256 hash of raw token).
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  userId         String
+  token          String    @unique
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+  /** Set when admin completes MFA for this session (null = pending MFA) */
+  mfaVerifiedAt  DateTime?
+  /** Elevated privileges until this time (re-auth with TOTP for sensitive ops) */
+  stepUpUntil    DateTime?
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -131,6 +172,27 @@ model ClientProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+/// Monthly membership for attorneys/judges ($99/mo: 1 included review + 10% off extras).
+model Membership {
+  id                   String           @id @default(cuid())
+  userId               String           @unique
+  status               MembershipStatus @default(INCOMPLETE)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?          @unique
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  /// Included reviews used in the current Stripe billing period
+  includedReviewsUsed  Int              @default(0)
+  cancelAtPeriodEnd    Boolean          @default(false)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([stripeCustomerId])
+}
+
 model DeviceToken {
   id        String   @id @default(cuid())
   userId    String
@@ -157,9 +219,13 @@ model Job {
   pdfFileName      String?
   baseFeeCents     Int
   rushFeeCents     Int            @default(0)
+  /// Amount the client pays (after membership benefits)
   grossFeeCents    Int
   platformFeeCents Int
   studentFeeCents  Int
+  /// List price before membership discount / included credit
+  listGrossCents   Int?
+  pricingMode      PricingMode    @default(LIST)
   dueAt            DateTime?
   assignedAt       DateTime?
   acceptedAt       DateTime?

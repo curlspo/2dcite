@@ -32,7 +32,7 @@ export async function GET(
 
     if (!allowed) return jsonError("Forbidden", 403, "FORBIDDEN");
 
-    return jsonOk({ job: serializeJob(job) });
+    return jsonOk({ job: serializeJob(job, user) });
   } catch (err) {
     return handleRouteError(err);
   }

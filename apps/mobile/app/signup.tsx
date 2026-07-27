@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { ApiError } from "@2dcite/api-client";
-import { isEduEmail, type RegisterBody } from "@2dcite/shared";
+import { isEduEmail, US_STATES, type RegisterBody } from "@2dcite/shared";
 import { useAuth } from "../src/lib/auth";
 import {
   Button,
@@ -17,12 +17,12 @@ const ROLES: { value: RegisterBody["role"]; label: string; hint: string }[] = [
   {
     value: "ATTORNEY",
     label: "Attorney",
-    hint: "Bar number required",
+    hint: "State + bar number required",
   },
   {
     value: "JUDGE",
     label: "Judge",
-    hint: "License/bar number required",
+    hint: "State + license/bar number required",
   },
   {
     value: "STUDENT",
@@ -37,6 +37,7 @@ export default function SignupScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [barState, setBarState] = useState("");
   const [barNumber, setBarNumber] = useState("");
   const [role, setRole] = useState<RegisterBody["role"]>("ATTORNEY");
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +58,12 @@ export default function SignupScreen() {
       );
       return;
     }
+    if (needsBar && !barState) {
+      setError(
+        "Select the state where your bar or judicial license is issued."
+      );
+      return;
+    }
     if (needsBar && !barNumber.trim()) {
       setError(
         "Attorneys and judges must provide a state bar or judicial license number."
@@ -70,7 +77,9 @@ export default function SignupScreen() {
         email: email.trim(),
         password,
         role,
-        ...(needsBar ? { barNumber: barNumber.trim() } : {}),
+        ...(needsBar
+          ? { barState, barNumber: barNumber.trim() }
+          : {}),
       });
       await signIn(res.token, res.user);
       router.replace("/");
@@ -114,16 +123,61 @@ export default function SignupScreen() {
         placeholder={needsEdu ? "you@lawschool.edu" : "you@firm.com"}
       />
       {needsBar ? (
-        <Field
-          label={
-            role === "JUDGE"
-              ? "Judicial license / bar number"
-              : "State bar number"
-          }
-          value={barNumber}
-          onChangeText={setBarNumber}
-          autoCapitalize="characters"
-        />
+        <>
+          <Text style={styles.sectionLabel}>
+            {role === "JUDGE"
+              ? "Judicial license jurisdiction"
+              : "Bar jurisdiction"}
+          </Text>
+          <Muted>
+            Bar numbers are state-specific. Select the issuing state, then
+            enter your number.
+          </Muted>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.stateScroll}
+            contentContainerStyle={styles.stateRow}
+          >
+            {US_STATES.map((s) => (
+              <Pressable
+                key={s.code}
+                onPress={() => setBarState(s.code)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: barState === s.code }}
+                accessibilityLabel={`${s.code} ${s.name}`}
+                style={[
+                  styles.stateChip,
+                  barState === s.code && styles.stateChipActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.stateChipText,
+                    barState === s.code && styles.stateChipTextActive,
+                  ]}
+                >
+                  {s.code}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+          {barState ? (
+            <Muted>
+              Selected:{" "}
+              {US_STATES.find((s) => s.code === barState)?.name ?? barState} (
+              {barState})
+            </Muted>
+          ) : null}
+          <Field
+            label={
+              role === "JUDGE" ? "License / bar number" : "Bar number"
+            }
+            value={barNumber}
+            onChangeText={setBarNumber}
+            autoCapitalize="characters"
+          />
+        </>
       ) : null}
       <Field
         label="Password (min 10)"
@@ -153,4 +207,29 @@ const styles = StyleSheet.create({
   },
   roleText: { color: colors.ink, fontWeight: "600" },
   roleHint: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  sectionLabel: {
+    color: colors.ink,
+    fontWeight: "600",
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  stateScroll: { maxHeight: 52, marginVertical: 8 },
+  stateRow: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
+  stateChip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: colors.card,
+    minWidth: 48,
+    alignItems: "center",
+  },
+  stateChipActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accentSoft,
+  },
+  stateChipText: { color: colors.ink, fontWeight: "600", fontSize: 13 },
+  stateChipTextActive: { color: colors.accent },
 });

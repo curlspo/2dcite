@@ -4,6 +4,8 @@ import { requireRole, toMeResponse } from "@/lib/session";
 import { uploadExists } from "@/lib/storage";
 import { writeAudit } from "@/lib/audit";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
+import { clientIp } from "@/lib/rate-limit";
+import { captchaTokenFromBody, verifyCaptchaToken } from "@/lib/captcha";
 
 /** GET current student application / profile status */
 export async function GET(request: Request) {
@@ -28,7 +30,19 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const user = await requireRole(request, ["STUDENT"]);
-    const body = studentApplicationSchema.parse(await request.json());
+    const raw = await request.json();
+    const captcha = await verifyCaptchaToken(
+      captchaTokenFromBody(raw),
+      clientIp(request)
+    );
+    if (!captcha.ok) {
+      return jsonError(
+        "Please complete the security check and try again.",
+        400,
+        "CAPTCHA_FAILED"
+      );
+    }
+    const body = studentApplicationSchema.parse(raw);
 
     if (user.studentProfile?.status === "APPROVED") {
       return jsonError(
