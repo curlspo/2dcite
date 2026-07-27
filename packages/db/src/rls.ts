@@ -3,6 +3,10 @@
  *
  * GUC (transaction-local via set_config is_local=true):
  *   app.user_id, app.user_role, app.rls_bypass
+ *
+ * Bypass mode keeps the login role (Neon owner has BYPASSRLS) so system paths
+ * like register/login never depend on GUC propagation under SET ROLE.
+ * User/deny modes SET LOCAL ROLE twodcite_app so FORCE RLS policies apply.
  */
 
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -14,7 +18,13 @@ export type RlsContext =
   | { mode: "bypass"; reason?: string }
   | { mode: "deny" };
 
-const als = new AsyncLocalStorage<RlsContext>();
+/** Singleton ALS — survive Next.js bundling duplicate module instances. */
+const globalForRls = globalThis as unknown as {
+  __2dciteRlsAls?: AsyncLocalStorage<RlsContext>;
+};
+const als =
+  globalForRls.__2dciteRlsAls ?? new AsyncLocalStorage<RlsContext>();
+globalForRls.__2dciteRlsAls = als;
 
 /** Transaction-like client that can run $executeRaw (base or extended). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,14 +53,31 @@ function resolveContext(): RlsContext {
 }
 
 /**
- * Drop privileges to twodcite_app (NOBYPASSRLS) then set identity GUC.
- * Neon neondb_owner has BYPASSRLS=true, so without SET ROLE policies never run.
+ * Apply role + identity GUCs for this transaction.
+ *
+ * - bypass: stay as login role (BYPASSRLS on Neon owner) — reliable for register/login
+ * - user/deny: SET LOCAL ROLE twodcite_app so FORCE RLS policies enforce
  */
 export async function applyRlsConfig(
   tx: Tx,
   ctx: RlsContext = resolveContext()
 ): Promise<void> {
-  // Must run before queries on this transaction
+  if (ctx.mode === "bypass") {
+    // Do not drop to twodcite_app — owner BYPASSRLS is the system escape hatch.
+    // Relying only on app.rls_bypass after SET ROLE broke signup in production
+    // (42501 new row violates RLS on User).
+    try {
+      await tx.$executeRawUnsafe(`RESET ROLE`);
+    } catch {
+      /* already login role */
+    }
+    await tx.$executeRaw`SELECT set_config('app.rls_bypass', 'on', true)`;
+    await tx.$executeRaw`SELECT set_config('app.user_id', '', true)`;
+    await tx.$executeRaw`SELECT set_config('app.user_role', '', true)`;
+    return;
+  }
+
+  // User and deny: enforce policies under non-bypass role
   try {
     await tx.$executeRawUnsafe(`SET LOCAL ROLE twodcite_app`);
   } catch (e) {
@@ -61,18 +88,13 @@ export async function applyRlsConfig(
     );
   }
 
-  if (ctx.mode === "bypass") {
-    await tx.$executeRaw`SELECT set_config('app.rls_bypass', 'on', true)`;
-    await tx.$executeRaw`SELECT set_config('app.user_id', '', true)`;
-    await tx.$executeRaw`SELECT set_config('app.user_role', '', true)`;
-    return;
-  }
   if (ctx.mode === "deny") {
     await tx.$executeRaw`SELECT set_config('app.rls_bypass', 'off', true)`;
     await tx.$executeRaw`SELECT set_config('app.user_id', ${"__none__"}, true)`;
     await tx.$executeRaw`SELECT set_config('app.user_role', ${"NONE"}, true)`;
     return;
   }
+
   await tx.$executeRaw`SELECT set_config('app.rls_bypass', 'off', true)`;
   await tx.$executeRaw`SELECT set_config('app.user_id', ${ctx.userId}, true)`;
   await tx.$executeRaw`SELECT set_config('app.user_role', ${ctx.role}, true)`;

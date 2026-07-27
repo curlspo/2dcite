@@ -6,13 +6,18 @@ Every tenant table has **FORCE ROW LEVEL SECURITY** and **explicit policies per 
 
 ### Enforcement model
 
-Neon’s default role (`neondb_owner`) has **`BYPASSRLS`**, so policies never run until each transaction does:
+Neon’s default role (`neondb_owner`) has **`BYPASSRLS`**, so policies never run until each transaction drops privileges:
 
 ```sql
+-- Authenticated / deny paths:
 SET LOCAL ROLE twodcite_app;  -- NOLOGIN, NOBYPASSRLS
 SELECT set_config('app.user_id',   '<userId>', true);
 SELECT set_config('app.user_role', '<role>',   true);
-SELECT set_config('app.rls_bypass','on|off',   true);
+SELECT set_config('app.rls_bypass','off',      true);
+
+-- System bypass (register, login lookup, webhooks):
+RESET ROLE;  -- stay as owner with BYPASSRLS (do not depend on GUC alone)
+SELECT set_config('app.rls_bypass','on', true);
 ```
 
 The app does this automatically via `applyRlsConfig()` on every Prisma query transaction.
