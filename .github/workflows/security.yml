@@ -11,21 +11,26 @@ on:
 permissions:
   contents: read
 
+# Actions runtime: Node 24 (Node 20 is deprecated on GitHub runners)
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   sast-and-audit:
     name: Typecheck · Lint · Audit
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # v5+ use node24 action runtime (avoids Node 20 deprecation noise)
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Version comes from package.json "packageManager" (do not also set version:)
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: "pnpm"
