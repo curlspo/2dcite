@@ -1,0 +1,84 @@
+name: Security
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    # Weekly dependency audit
+    - cron: "0 14 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  sast-and-audit:
+    name: Typecheck · Lint · Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Prisma generate
+        run: pnpm --filter @2dcite/db exec prisma generate
+        env:
+          # Schema generate does not need a live DB
+          DATABASE_URL: postgresql://user:pass@localhost:5432/ci
+
+      - name: Typecheck web
+        run: pnpm --filter @2dcite/web exec tsc --noEmit
+
+      - name: Lint web (if configured)
+        run: pnpm --filter @2dcite/web lint || true
+
+      - name: Production build (for client bundle scan)
+        run: pnpm --filter @2dcite/web build
+        env:
+          # Dummy values so build can complete without real secrets
+          DATABASE_URL: postgresql://user:pass@localhost:5432/ci
+          STRIPE_SECRET_KEY: sk_test_placeholder_not_real_xxxxxxxx
+          NEXT_PUBLIC_APP_URL: https://example.com
+          NEXT_PUBLIC_API_URL: https://example.com/api/v1
+
+      - name: Assert no secrets in client bundles
+        run: pnpm check:client-secrets
+
+      - name: pnpm audit (production, high+)
+        run: pnpm audit --prod --audit-level=high
+        continue-on-error: true
+
+      - name: Secret pattern scan (basic)
+        run: |
+          set -e
+          # Fail if common secret material appears outside docs/examples
+          if git grep -nE 'sk_live_[A-Za-z0-9]{20,}|sk_test_[A-Za-z0-9]{20,}|whsec_[A-Za-z0-9]{20,}' -- \
+            ':!docs/**' ':!*.md' ':!.env*' 2>/dev/null; then
+            echo "Possible Stripe secret material committed"
+            exit 1
+          fi
+          echo "No obvious committed Stripe secrets"
+
+  # Placeholder for optional DAST (zap baseline) — enable when staging URL is available
+  # dast:
+  #   needs: sast-and-audit
+  #   if: github.event_name == 'schedule'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: zaproxy/action-baseline@v0.12.0
+  #       with:
+  #         target: 'https://staging.2dcite.com'
