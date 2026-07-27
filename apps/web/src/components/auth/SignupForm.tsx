@@ -2,23 +2,24 @@
 
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
+import { isEduEmail } from "@2dcite/shared";
 import { apiFetch, BrowserApiError } from "@/lib/api-browser";
 
 const ROLES = [
   {
     value: "ATTORNEY",
     label: "Attorney",
-    desc: "Submit briefs for citation review",
+    desc: "Submit briefs for citation review — bar number required",
   },
   {
     value: "JUDGE",
     label: "Judge",
-    desc: "Submit orders for citation review",
+    desc: "Submit orders for citation review — license/bar number required",
   },
   {
     value: "STUDENT",
     label: "Law student (2L/3L)",
-    desc: "Apply to review citations",
+    desc: "Apply to review citations — .edu email required",
   },
 ] as const;
 
@@ -33,18 +34,42 @@ export function SignupForm({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [barNumber, setBarNumber] = useState("");
   const [role, setRole] = useState<string>(initialRole);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const needsBar = role === "ATTORNEY" || role === "JUDGE";
+  const needsEdu = role === "STUDENT";
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (needsEdu && !isEduEmail(email.trim())) {
+      setError(
+        "Student accounts require a .edu email address from an accredited law school."
+      );
+      return;
+    }
+    if (needsBar && !barNumber.trim()) {
+      setError(
+        "Attorneys and judges must provide a state bar or judicial license number."
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await apiFetch<{ user: { role: string } }>("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+          ...(needsBar ? { barNumber: barNumber.trim() } : {}),
+        }),
       });
       if (data.user.role === "STUDENT") {
         router.push("/onboarding/student");
@@ -118,7 +143,7 @@ export function SignupForm({
       </div>
       <div className="block text-sm">
         <label htmlFor="signup-email" className="font-medium text-ink">
-          Email
+          Email{needsEdu ? " (.edu required)" : ""}
         </label>
         <input
           id="signup-email"
@@ -128,9 +153,42 @@ export function SignupForm({
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          placeholder={needsEdu ? "you@lawschool.edu" : "you@firm.com"}
           className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 text-ink"
+          aria-describedby={needsEdu ? "signup-email-hint" : undefined}
         />
+        {needsEdu && (
+          <p id="signup-email-hint" className="mt-1 text-xs text-muted">
+            Students must register with a school-issued .edu address.
+          </p>
+        )}
       </div>
+      {needsBar && (
+        <div className="block text-sm">
+          <label htmlFor="signup-bar" className="font-medium text-ink">
+            {role === "JUDGE"
+              ? "Judicial license / bar number"
+              : "State bar number"}
+          </label>
+          <input
+            id="signup-bar"
+            name="barNumber"
+            required
+            autoComplete="off"
+            value={barNumber}
+            onChange={(e) => setBarNumber(e.target.value)}
+            placeholder={
+              role === "JUDGE" ? "License or bar number" : "e.g. 123456"
+            }
+            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 text-ink"
+            aria-describedby="signup-bar-hint"
+          />
+          <p id="signup-bar-hint" className="mt-1 text-xs text-muted">
+            Required to create an attorney or judge account. Used to reduce
+            spam and verify professional status.
+          </p>
+        </div>
+      )}
       <div className="block text-sm">
         <label htmlFor="signup-password" className="font-medium text-ink">
           Password (min 10 characters)
@@ -155,7 +213,8 @@ export function SignupForm({
         type="submit"
         disabled={loading}
         aria-busy={loading}
-        className="min-h-11 w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="btn-primary w-full"
+        style={{ color: "#ffffff", backgroundColor: "#16325c" }}
       >
         {loading ? "Creating account…" : "Create account"}
       </button>

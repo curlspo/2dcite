@@ -14,7 +14,7 @@ export const PRICING_DEFAULTS = {
   maxPages: 25,
   /** Standard SLA hours after student accept */
   standardSlaHours: 48,
-  /** Rush SLA hours after student accept (placeholder) */
+  /** Rush SLA hours after student accept */
   rushSlaHours: 24,
   /** Minutes for student to accept before reassign */
   assignmentAcceptMinutes: 60,

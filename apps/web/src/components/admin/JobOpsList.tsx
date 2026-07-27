@@ -113,7 +113,8 @@ export function JobOpsList({ initial }: { initial: AdminJobRow[] }) {
                   type="button"
                   disabled={busy === j.id}
                   onClick={() => reassign(j.id)}
-                  className="rounded-md bg-accent px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                  className="btn-primary !min-h-9 !px-3 !py-1.5 text-sm"
+                  style={{ color: "#ffffff", backgroundColor: "#16325c" }}
                 >
                   Reassign
                 </button>

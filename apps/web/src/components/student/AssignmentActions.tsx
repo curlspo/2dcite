@@ -62,7 +62,8 @@ export function AssignmentActions({
           disabled={loading}
           aria-busy={loading}
           onClick={accept}
-          className="min-h-11 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="btn-primary"
+          style={{ color: "#ffffff", backgroundColor: "#16325c" }}
         >
           Accept assignment
         </button>

@@ -99,7 +99,8 @@ export function LoginForm() {
         type="submit"
         disabled={loading}
         aria-busy={loading}
-        className="min-h-11 w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="btn-primary w-full"
+        style={{ color: "#ffffff", backgroundColor: "#16325c" }}
       >
         {loading ? "Signing in…" : "Sign in"}
       </button>

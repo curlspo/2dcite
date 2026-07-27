@@ -9,11 +9,33 @@ import {
 } from "@/lib/session";
 import { writeAudit } from "@/lib/audit";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/http";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
+    const ip = clientIp(request);
+    const ipLimit = rateLimit(`login:ip:${ip}`, 30, 15 * 60 * 1000);
+    if (!ipLimit.ok) {
+      return jsonError(
+        "Too many login attempts. Try again later.",
+        429,
+        "RATE_LIMITED",
+        { retryAfterSec: ipLimit.retryAfterSec }
+      );
+    }
+
     const body = loginBodySchema.parse(await request.json());
     const email = body.email.toLowerCase().trim();
+
+    const emailLimit = rateLimit(`login:email:${email}`, 15, 15 * 60 * 1000);
+    if (!emailLimit.ok) {
+      return jsonError(
+        "Too many login attempts for this account. Try again later.",
+        429,
+        "RATE_LIMITED",
+        { retryAfterSec: emailLimit.retryAfterSec }
+      );
+    }
 
     const user = await prisma.user.findUnique({
       where: { email },

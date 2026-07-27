@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { BrandLockup } from "./BrandMark";
 
 const NAV = [
   { href: "/#how-it-works", label: "How it works" },
@@ -14,15 +15,12 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="border-b border-border bg-card/95 backdrop-blur" role="banner">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
-        <Link
-          href="/"
-          className="font-serif text-xl font-semibold tracking-tight text-ink"
-        >
-          <span aria-hidden="true">2dcite</span>
-          <span className="sr-only">2dcite home</span>
-        </Link>
+    <header
+      className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur"
+      role="banner"
+    >
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-3.5">
+        <BrandLockup href="/" compact />
 
         {/* Desktop nav */}
         <nav
@@ -40,7 +38,7 @@ export function SiteHeader() {
           ))}
           <Link
             href="/login"
-            className="rounded-md bg-accent px-3 py-2 font-medium text-white hover:opacity-90"
+            className="font-medium text-muted underline-offset-4 hover:text-ink hover:underline"
           >
             Sign in
           </Link>
@@ -80,7 +78,7 @@ export function SiteHeader() {
             <li>
               <Link
                 href="/login"
-                className="mt-2 block min-h-11 rounded-md bg-accent px-3 py-3 text-center font-medium text-white"
+                className="mt-2 block min-h-11 rounded-md border border-border px-3 py-3 text-center font-medium text-ink hover:bg-surface-muted"
                 onClick={() => setOpen(false)}
               >
                 Sign in

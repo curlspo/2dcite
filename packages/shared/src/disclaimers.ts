@@ -132,7 +132,65 @@ export const FUNDS_HOLD_COPY = {
     "The student reviewer’s share is released only after the system automatically generates the Certificate of Citation Review. The platform retains its service fee.",
   heldStatus:
     "Funds held by 2dcite pending certificate issuance.",
+  /** Plain-language charge/refund trigger for UI */
+  chargedOnSubmitRefundIfUnfulfilled:
+    "You’re charged when you submit — fully refunded if your document isn’t reviewed.",
 } as const;
+
+/**
+ * Full disclaimer body as structured sections (homepage /disclaimer page +
+ * in-flow acknowledgment panel). Content must stay in sync with legal pages.
+ */
+export const FULL_DISCLAIMER_SECTIONS = [
+  {
+    heading: null as string | null,
+    paragraphs: [
+      LIABILITY_CORE.ultimateLiability,
+      LIABILITY_CORE.nonDelegableDuty,
+      LIABILITY_CORE.noPlatformResponsibility,
+      LIABILITY_CORE.certificateScope,
+      LIABILITY_CORE.noAttorneyClient,
+      LIABILITY_CORE.notLegalAdvice,
+      CERTIFICATE_BOILERPLATE.mayFileOrRetain,
+    ],
+  },
+  {
+    heading: "Confidential documents",
+    paragraphs: [
+      CONFIDENTIALITY_CORE.noResponsibilityForConfidential,
+      CONFIDENTIALITY_CORE.clientSoleRiskOfUpload,
+    ],
+  },
+  {
+    heading: "Limited submissions (table of authorities)",
+    paragraphs: [CONFIDENTIALITY_CORE.limitedSubmissionToa],
+  },
+  {
+    heading: "Post-filing and post-issuance review",
+    paragraphs: [
+      POST_FILING_CORE.postFilingAndPostIssuanceOk,
+      POST_FILING_CORE.opportunityToCorrectOrWithdraw,
+      POST_FILING_CORE.sensitiveMatters,
+      POST_FILING_CORE.noDutyToCorrect,
+    ],
+  },
+  {
+    heading: "Student confidentiality and non-disclosure",
+    paragraphs: [
+      CONFIDENTIALITY_CORE.studentConfidentiality,
+      CONFIDENTIALITY_CORE.noDisclosureOfFailedCitations,
+      CONFIDENTIALITY_CORE.findingsOnlyToClient,
+    ],
+  },
+  {
+    heading: "Payments held by the platform",
+    paragraphs: [
+      FUNDS_HOLD_COPY.clientPayOnUpload,
+      FUNDS_HOLD_COPY.releaseOnCertificate,
+      FUNDS_HOLD_COPY.chargedOnSubmitRefundIfUnfulfilled,
+    ],
+  },
+] as const;
 
 /** Support contact (override via env in production UI if needed) */
 export const SUPPORT_EMAIL = "support@2dcite.com";

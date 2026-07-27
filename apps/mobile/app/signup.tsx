@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { ApiError } from "@2dcite/api-client";
-import type { RegisterBody } from "@2dcite/shared";
+import { isEduEmail, type RegisterBody } from "@2dcite/shared";
 import { useAuth } from "../src/lib/auth";
 import {
   Button,
@@ -13,10 +13,22 @@ import {
 } from "../src/components/ui";
 import { colors } from "../src/lib/theme";
 
-const ROLES: { value: RegisterBody["role"]; label: string }[] = [
-  { value: "ATTORNEY", label: "Attorney" },
-  { value: "JUDGE", label: "Judge" },
-  { value: "STUDENT", label: "Law student (2L/3L)" },
+const ROLES: { value: RegisterBody["role"]; label: string; hint: string }[] = [
+  {
+    value: "ATTORNEY",
+    label: "Attorney",
+    hint: "Bar number required",
+  },
+  {
+    value: "JUDGE",
+    label: "Judge",
+    hint: "License/bar number required",
+  },
+  {
+    value: "STUDENT",
+    label: "Law student (2L/3L)",
+    hint: ".edu email required",
+  },
 ];
 
 export default function SignupScreen() {
@@ -25,14 +37,30 @@ export default function SignupScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [barNumber, setBarNumber] = useState("");
   const [role, setRole] = useState<RegisterBody["role"]>("ATTORNEY");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const needsBar = role === "ATTORNEY" || role === "JUDGE";
+  const needsEdu = role === "STUDENT";
 
   async function onSignup() {
     setError(null);
     if (password.length < 10) {
       setError("Password must be at least 10 characters.");
+      return;
+    }
+    if (needsEdu && !isEduEmail(email.trim())) {
+      setError(
+        "Student accounts require a .edu email address from an accredited law school."
+      );
+      return;
+    }
+    if (needsBar && !barNumber.trim()) {
+      setError(
+        "Attorneys and judges must provide a state bar or judicial license number."
+      );
       return;
     }
     setLoading(true);
@@ -42,6 +70,7 @@ export default function SignupScreen() {
         email: email.trim(),
         password,
         role,
+        ...(needsBar ? { barNumber: barNumber.trim() } : {}),
       });
       await signIn(res.token, res.user);
       router.replace("/");
@@ -58,7 +87,10 @@ export default function SignupScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <Title>Create account</Title>
-      <Muted>Students complete eligibility document uploads on the web.</Muted>
+      <Muted>
+        Students need a .edu email. Attorneys and judges must provide a bar
+        number. Students complete eligibility uploads on the web.
+      </Muted>
       <ErrorBox message={error} />
       {ROLES.map((r) => (
         <Pressable
@@ -66,22 +98,33 @@ export default function SignupScreen() {
           onPress={() => setRole(r.value)}
           accessibilityRole="radio"
           accessibilityState={{ selected: role === r.value }}
-          style={[
-            styles.role,
-            role === r.value && styles.roleActive,
-          ]}
+          style={[styles.role, role === r.value && styles.roleActive]}
         >
           <Text style={styles.roleText}>{r.label}</Text>
+          <Text style={styles.roleHint}>{r.hint}</Text>
         </Pressable>
       ))}
       <Field label="Full name" value={name} onChangeText={setName} />
       <Field
-        label="Email"
+        label={needsEdu ? "Email (.edu required)" : "Email"}
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
+        placeholder={needsEdu ? "you@lawschool.edu" : "you@firm.com"}
       />
+      {needsBar ? (
+        <Field
+          label={
+            role === "JUDGE"
+              ? "Judicial license / bar number"
+              : "State bar number"
+          }
+          value={barNumber}
+          onChangeText={setBarNumber}
+          autoCapitalize="characters"
+        />
+      ) : null}
       <Field
         label="Password (min 10)"
         secureTextEntry
@@ -109,4 +152,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
   },
   roleText: { color: colors.ink, fontWeight: "600" },
+  roleHint: { color: colors.muted, fontSize: 12, marginTop: 2 },
 });

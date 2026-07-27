@@ -10,6 +10,7 @@ import {
   computeFeeBreakdown,
 } from "@2dcite/shared";
 import { apiFetch, BrowserApiError } from "@/lib/api-browser";
+import { DisclaimerAckPanel } from "@/components/legal/DisclaimerAckPanel";
 
 function formatUsd(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -26,6 +27,7 @@ export function NewJobForm() {
   const [tier, setTier] = useState<"STANDARD_48H" | "RUSH">("STANDARD_48H");
   const [file, setFile] = useState<File | null>(null);
   const [acks, setAcks] = useState<Record<string, boolean>>({});
+  const [disclaimerRead, setDisclaimerRead] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -34,16 +36,24 @@ export function NewJobForm() {
     [tier]
   );
 
-  const allAcked = CLIENT_SUBMIT_ACKNOWLEDGMENTS.every((a) => acks[a.id]);
+  const allAcked =
+    disclaimerRead &&
+    CLIENT_SUBMIT_ACKNOWLEDGMENTS.every((a) => acks[a.id]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     if (!file) {
-      setError("Upload a PDF of the brief or order.");
+      setError("Upload a PDF of the brief or order (or table of authorities).");
       return;
     }
-    if (!allAcked) {
+    if (!disclaimerRead) {
+      setError(
+        "You must confirm that you have read and understand the full disclaimer."
+      );
+      return;
+    }
+    if (!CLIENT_SUBMIT_ACKNOWLEDGMENTS.every((a) => acks[a.id])) {
       setError("You must accept all liability acknowledgments.");
       return;
     }
@@ -143,8 +153,10 @@ export function NewJobForm() {
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-ink">Turnaround</legend>
         <label
-          className={`flex cursor-pointer justify-between rounded-md border p-3 ${
-            tier === "STANDARD_48H" ? "border-accent bg-accent-soft" : "border-border bg-card"
+          className={`flex min-h-11 cursor-pointer justify-between rounded-xl border p-3 ${
+            tier === "STANDARD_48H"
+              ? "border-accent bg-accent-soft"
+              : "border-border bg-card"
           }`}
         >
           <span className="flex gap-2">
@@ -166,8 +178,10 @@ export function NewJobForm() {
           </span>
         </label>
         <label
-          className={`flex cursor-pointer justify-between rounded-md border p-3 ${
-            tier === "RUSH" ? "border-accent bg-accent-soft" : "border-border bg-card"
+          className={`flex min-h-11 cursor-pointer justify-between rounded-xl border p-3 ${
+            tier === "RUSH"
+              ? "border-accent bg-accent-soft"
+              : "border-border bg-card"
           }`}
         >
           <span className="flex gap-2">
@@ -180,7 +194,8 @@ export function NewJobForm() {
             <span>
               <span className="font-medium text-ink">Rush</span>
               <span className="block text-xs text-muted">
-                {PRICING_DEFAULTS.rushSlaHours} hours after student accepts · priority queue
+                {PRICING_DEFAULTS.rushSlaHours} hours after student accepts ·
+                priority queue
               </span>
             </span>
           </span>
@@ -195,20 +210,10 @@ export function NewJobForm() {
           PDF upload (max ~{PRICING_DEFAULTS.maxPages} pages recommended)
         </label>
         <p id="job-pdf-hint" className="mt-1 text-xs text-muted">
-          You may upload a full brief or order, or limit the submission to a{" "}
+          Full brief/order or{" "}
           <strong className="font-medium text-ink">table of authorities</strong>{" "}
-          (or similar citation list) to confirm existence and form of cases.
-          Materials may be submitted{" "}
-          <strong className="font-medium text-ink">
-            before or after filing
-          </strong>
-          , and{" "}
-          <strong className="font-medium text-ink">
-            before or after an order is issued
-          </strong>
-          —which can create an opportunity to correct a filing or withdraw an
-          order under applicable rules (actions only you take). 2dcite takes no
-          responsibility for confidential materials you choose to upload.
+          only. Before or after filing / order issuance. 2dcite takes no
+          responsibility for confidential materials you upload.
         </p>
         <input
           id="job-pdf"
@@ -221,9 +226,14 @@ export function NewJobForm() {
         />
       </div>
 
-      <fieldset className="rounded-lg border border-border bg-card p-4">
+      <DisclaimerAckPanel
+        checked={disclaimerRead}
+        onCheckedChange={setDisclaimerRead}
+      />
+
+      <fieldset className="rounded-xl border border-border bg-card p-4">
         <legend className="px-1 text-sm font-medium text-ink">
-          Liability acknowledgments
+          Specific acknowledgments
         </legend>
         <p className="mt-1 text-xs text-muted">
           Required before payment. Copy version {DISCLAIMER_COPY_VERSION}
@@ -247,10 +257,13 @@ export function NewJobForm() {
         </ul>
       </fieldset>
 
-      <div className="rounded-lg border border-gold/30 bg-accent-soft/40 p-4 text-sm text-muted">
+      <div className="rounded-xl border border-gold/30 bg-accent-soft/40 p-4 text-sm text-muted">
         <p className="font-medium text-ink">Payment & hold</p>
         <p className="mt-1">{FUNDS_HOLD_COPY.clientPayOnUpload}</p>
         <p className="mt-1">{FUNDS_HOLD_COPY.releaseOnCertificate}</p>
+        <p className="mt-1">
+          {FUNDS_HOLD_COPY.chargedOnSubmitRefundIfUnfulfilled}
+        </p>
         <p className="mt-3 text-ink">
           Total due now: <strong>{formatUsd(fees.grossCents)}</strong>
           <span className="text-muted">
@@ -265,7 +278,8 @@ export function NewJobForm() {
         type="submit"
         disabled={loading || !allAcked}
         aria-busy={loading}
-        className="min-h-11 rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+        className="btn-primary w-full sm:w-auto"
+        style={{ color: "#ffffff", backgroundColor: "#16325c" }}
       >
         {loading ? "Processing…" : `Pay ${formatUsd(fees.grossCents)} & submit`}
       </button>

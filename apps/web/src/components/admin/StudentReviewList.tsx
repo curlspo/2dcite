@@ -91,7 +91,7 @@ export function StudentReviewList({
             aria-pressed={filter === f}
             className={`min-h-11 rounded-md px-3 py-2 ${
               filter === f
-                ? "bg-accent text-white"
+                ? "bg-[#16325c] text-white"
                 : "border border-border bg-card text-muted"
             }`}
           >
@@ -145,7 +145,8 @@ export function StudentReviewList({
                       disabled={busyId === s.id}
                       aria-busy={busyId === s.id}
                       onClick={() => approve(s.id)}
-                      className="min-h-11 rounded-md bg-accent px-3 py-2 text-sm text-white disabled:opacity-50"
+                      className="btn-primary !px-3 text-sm"
+                      style={{ color: "#ffffff", backgroundColor: "#16325c" }}
                     >
                       Approve {s.name}
                     </button>

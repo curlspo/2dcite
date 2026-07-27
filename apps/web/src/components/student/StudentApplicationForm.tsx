@@ -212,7 +212,8 @@ export function StudentApplicationForm({ initial }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+          className="btn-primary"
+          style={{ color: "#ffffff", backgroundColor: "#16325c" }}
         >
           {loading ? "Submitting…" : "Submit for admin review"}
         </button>

@@ -135,7 +135,8 @@ export default async function JobDetailPage({
           )}
           <a
             href={`/api/v1/jobs/${job.id}/certificate?download=1`}
-            className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            className="btn-primary mt-3"
+            style={{ color: "#ffffff", backgroundColor: "#16325c" }}
           >
             Download certificate PDF
           </a>

@@ -19,16 +19,47 @@ export const healthResponseSchema = z.object({
 });
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
 
-export const registerBodySchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(10).max(128),
-  name: z.string().min(1).max(200),
-  role: z.enum([
-    UserRole.ATTORNEY,
-    UserRole.JUDGE,
-    UserRole.STUDENT,
-  ]),
-});
+/** True if the email domain is a .edu address (e.g. name@school.edu). */
+export function isEduEmail(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase().trim() ?? "";
+  if (!domain) return false;
+  return domain === "edu" || domain.endsWith(".edu");
+}
+
+export const registerBodySchema = z
+  .object({
+    email: z.string().email(),
+    password: z.string().min(10).max(128),
+    name: z.string().min(1).max(200),
+    role: z.enum([UserRole.ATTORNEY, UserRole.JUDGE, UserRole.STUDENT]),
+    /** Required for ATTORNEY and JUDGE */
+    barNumber: z.string().min(1).max(80).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const email = data.email.trim().toLowerCase();
+    if (data.role === UserRole.STUDENT && !isEduEmail(email)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["email"],
+        message:
+          "Student accounts require a .edu email address from an accredited law school.",
+      });
+    }
+    if (
+      data.role === UserRole.ATTORNEY ||
+      data.role === UserRole.JUDGE
+    ) {
+      const bar = data.barNumber?.trim() ?? "";
+      if (bar.length < 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["barNumber"],
+          message:
+            "Attorneys and judges must provide a state bar or judicial license number.",
+        });
+      }
+    }
+  });
 export type RegisterBody = z.infer<typeof registerBodySchema>;
 
 export const loginBodySchema = z.object({

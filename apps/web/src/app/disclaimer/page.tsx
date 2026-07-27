@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   DISCLAIMER_COPY_VERSION,
-  LIABILITY_CORE,
-  CERTIFICATE_BOILERPLATE,
-  CONFIDENTIALITY_CORE,
-  FUNDS_HOLD_COPY,
-  POST_FILING_CORE,
+  FULL_DISCLAIMER_SECTIONS,
 } from "@2dcite/shared";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 
@@ -27,45 +23,20 @@ export default function DisclaimerPage() {
             Disclaimer
           </h1>
           <div className="prose-sm mt-8 space-y-4 leading-relaxed text-muted">
-            <p>{LIABILITY_CORE.ultimateLiability}</p>
-            <p>{LIABILITY_CORE.nonDelegableDuty}</p>
-            <p>{LIABILITY_CORE.noPlatformResponsibility}</p>
-            <p>{LIABILITY_CORE.certificateScope}</p>
-            <p>{LIABILITY_CORE.noAttorneyClient}</p>
-            <p>{LIABILITY_CORE.notLegalAdvice}</p>
-            <p>{CERTIFICATE_BOILERPLATE.mayFileOrRetain}</p>
-
-            <h2 className="pt-4 font-serif text-xl font-semibold text-ink">
-              Confidential documents
-            </h2>
-            <p>{CONFIDENTIALITY_CORE.noResponsibilityForConfidential}</p>
-            <p>{CONFIDENTIALITY_CORE.clientSoleRiskOfUpload}</p>
-
-            <h2 className="pt-4 font-serif text-xl font-semibold text-ink">
-              Limited submissions (table of authorities)
-            </h2>
-            <p>{CONFIDENTIALITY_CORE.limitedSubmissionToa}</p>
-
-            <h2 className="pt-4 font-serif text-xl font-semibold text-ink">
-              Post-filing and post-issuance review
-            </h2>
-            <p>{POST_FILING_CORE.postFilingAndPostIssuanceOk}</p>
-            <p>{POST_FILING_CORE.opportunityToCorrectOrWithdraw}</p>
-            <p>{POST_FILING_CORE.sensitiveMatters}</p>
-            <p>{POST_FILING_CORE.noDutyToCorrect}</p>
-
-            <h2 className="pt-4 font-serif text-xl font-semibold text-ink">
-              Student confidentiality and non-disclosure
-            </h2>
-            <p>{CONFIDENTIALITY_CORE.studentConfidentiality}</p>
-            <p>{CONFIDENTIALITY_CORE.noDisclosureOfFailedCitations}</p>
-            <p>{CONFIDENTIALITY_CORE.findingsOnlyToClient}</p>
-
-            <h2 className="pt-4 font-serif text-xl font-semibold text-ink">
-              Payments held by the platform
-            </h2>
-            <p>{FUNDS_HOLD_COPY.clientPayOnUpload}</p>
-            <p>{FUNDS_HOLD_COPY.releaseOnCertificate}</p>
+            {FULL_DISCLAIMER_SECTIONS.map((section, i) => (
+              <div key={section.heading ?? `intro-${i}`}>
+                {section.heading && (
+                  <h2 className="pt-4 font-serif text-xl font-semibold text-ink">
+                    {section.heading}
+                  </h2>
+                )}
+                {section.paragraphs.map((p) => (
+                  <p key={p.slice(0, 64)} className="mt-3">
+                    {p}
+                  </p>
+                ))}
+              </div>
+            ))}
           </div>
           <p className="mt-10 text-sm text-muted">
             This page is product positioning language. Final Terms should be

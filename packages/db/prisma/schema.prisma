@@ -121,6 +121,8 @@ model StudentProfile {
 model ClientProfile {
   id        String   @id @default(cuid())
   userId    String   @unique
+  /** State bar / license number — required at registration for attorneys and judges */
+  barNumber String?
   barState  String?
   orgName   String?
   createdAt DateTime @default(now())

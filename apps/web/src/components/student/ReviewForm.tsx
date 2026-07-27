@@ -211,7 +211,8 @@ export function ReviewForm({ jobId }: { jobId: string }) {
         type="submit"
         disabled={loading || !attested}
         aria-busy={loading}
-        className="min-h-11 rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+        className="btn-primary"
+        style={{ color: "#ffffff", backgroundColor: "#16325c" }}
       >
         {loading ? "Submitting…" : "Submit review"}
       </button>
