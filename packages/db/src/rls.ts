@@ -160,6 +160,19 @@ export function createRlsPrismaClient(base: PrismaClient = basePrisma) {
       $allModels: {
         async $allOperations({ model, operation, args }) {
           const ctx = resolveContext();
+
+          // System bypass: use the login role as-is (Neon owner has BYPASSRLS).
+          // Do not open a nested transaction or SET ROLE — that path broke
+          // register/login on Vercel when ALS context was missing/wrong.
+          if (ctx.mode === "bypass") {
+            const del = modelDelegate(base, model);
+            const op = del[operation];
+            if (typeof op !== "function") {
+              throw new Error(`RLS: ${model}.${operation} missing`);
+            }
+            return op.call(del, args);
+          }
+
           return base.$transaction(async (tx) => {
             await applyRlsConfig(tx, ctx);
             const del = modelDelegate(tx, model);

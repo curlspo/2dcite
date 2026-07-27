@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "crypto";
-import { prisma, enterBypassRls } from "@2dcite/db";
+import { rawPrisma } from "@2dcite/db";
 import { z } from "zod";
 import { sanitizeEmail } from "@2dcite/shared";
 import { writeAudit } from "@/lib/audit";
@@ -63,21 +63,18 @@ export async function POST(request: Request) {
     const genericMessage =
       "If an account exists for that email, we sent password recovery instructions. Check your inbox and spam folder.";
 
-    await enterBypassRls(async () => {
-      const user = await prisma.user.findUnique({ where: { email } });
-      if (!user?.passwordHash) {
-        await writeAudit({
-          actorId: null,
-          action: "user.password_reset_requested",
-          entityType: "User",
-          entityId: null,
-          metadata: { emailDomain: email.split("@")[1] ?? null, found: false, ip },
-        }).catch(() => {});
-        return;
-      }
-
+    const user = await rawPrisma.user.findUnique({ where: { email } });
+    if (!user?.passwordHash) {
+      await writeAudit({
+        actorId: null,
+        action: "user.password_reset_requested",
+        entityType: "User",
+        entityId: null,
+        metadata: { emailDomain: email.split("@")[1] ?? null, found: false, ip },
+      }).catch(() => {});
+    } else {
       // Invalidate prior unused tokens for this user
-      await prisma.passwordResetToken.updateMany({
+      await rawPrisma.passwordResetToken.updateMany({
         where: { userId: user.id, usedAt: null },
         data: { usedAt: new Date() },
       });
@@ -86,7 +83,7 @@ export async function POST(request: Request) {
       const tokenHash = createHash("sha256").update(rawToken).digest("hex");
       const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
 
-      await prisma.passwordResetToken.create({
+      await rawPrisma.passwordResetToken.create({
         data: {
           userId: user.id,
           tokenHash,
@@ -123,7 +120,7 @@ export async function POST(request: Request) {
           emailMode: sent.ok ? sent.mode : sent.error,
         },
       }).catch(() => {});
-    });
+    }
 
     return jsonOk({ message: genericMessage });
   } catch (err) {

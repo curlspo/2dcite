@@ -2,8 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import {
-  prisma,
-  enterBypassRls,
+  rawPrisma,
   enterUserRls,
   type User,
   type StudentProfile,
@@ -45,25 +44,22 @@ export async function createSession(
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + SESSION_DAYS);
 
-  await enterBypassRls(async () => {
-    await prisma.session.create({
-      data: {
-        userId,
-        token: hashToken(token),
-        expiresAt,
-        mfaVerifiedAt: opts?.mfaVerified ? new Date() : null,
-      },
-    });
+  // rawPrisma for session writes — public auth must not depend on RLS SET ROLE
+  await rawPrisma.session.create({
+    data: {
+      userId,
+      token: hashToken(token),
+      expiresAt,
+      mfaVerifiedAt: opts?.mfaVerified ? new Date() : null,
+    },
   });
 
   return { token, expiresAt };
 }
 
 export async function deleteSessionByToken(token: string): Promise<void> {
-  await enterBypassRls(async () => {
-    await prisma.session.deleteMany({
-      where: { token: hashToken(token) },
-    });
+  await rawPrisma.session.deleteMany({
+    where: { token: hashToken(token) },
   });
 }
 
@@ -72,21 +68,17 @@ export async function getSessionByToken(
 ): Promise<SessionContext | null> {
   if (!token) return null;
 
-  // Session lookup is pre-auth; use bypass then switch to user context for work
-  const session = await enterBypassRls(() =>
-    prisma.session.findUnique({
-      where: { token: hashToken(token) },
-      include: {
-        user: { include: { studentProfile: true } },
-      },
-    })
-  );
+  // Session lookup is pre-auth; use unwrapped client (owner BYPASSRLS)
+  const session = await rawPrisma.session.findUnique({
+    where: { token: hashToken(token) },
+    include: {
+      user: { include: { studentProfile: true } },
+    },
+  });
 
   if (!session) return null;
   if (session.expiresAt < new Date()) {
-    await enterBypassRls(async () => {
-      await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
-    });
+    await rawPrisma.session.delete({ where: { id: session.id } }).catch(() => {});
     return null;
   }
 
@@ -226,25 +218,21 @@ export async function requireAdminStepUp(
 export async function markSessionMfaVerified(sessionId: string): Promise<void> {
   const stepUp = new Date();
   stepUp.setMinutes(stepUp.getMinutes() + STEP_UP_MINUTES);
-  await enterBypassRls(async () => {
-    await prisma.session.update({
-      where: { id: sessionId },
-      data: {
-        mfaVerifiedAt: new Date(),
-        stepUpUntil: stepUp,
-      },
-    });
+  await rawPrisma.session.update({
+    where: { id: sessionId },
+    data: {
+      mfaVerifiedAt: new Date(),
+      stepUpUntil: stepUp,
+    },
   });
 }
 
 export async function markSessionStepUp(sessionId: string): Promise<void> {
   const stepUp = new Date();
   stepUp.setMinutes(stepUp.getMinutes() + STEP_UP_MINUTES);
-  await enterBypassRls(async () => {
-    await prisma.session.update({
-      where: { id: sessionId },
-      data: { stepUpUntil: stepUp },
-    });
+  await rawPrisma.session.update({
+    where: { id: sessionId },
+    data: { stepUpUntil: stepUp },
   });
 }
 

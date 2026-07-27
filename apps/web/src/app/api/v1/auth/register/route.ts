@@ -1,4 +1,4 @@
-import { prisma, enterBypassRls } from "@2dcite/db";
+import { rawPrisma } from "@2dcite/db";
 import { isEduEmail, registerBodySchema } from "@2dcite/shared";
 import { hashPassword } from "@/lib/password";
 import {
@@ -76,9 +76,9 @@ export async function POST(request: Request) {
       }
     }
 
-    const existing = await enterBypassRls(() =>
-      prisma.user.findUnique({ where: { email } })
-    );
+    // rawPrisma: login role has BYPASSRLS on Neon — required for public signup.
+    // RLS-wrapped prisma + SET ROLE was rejecting inserts in production (42501).
+    const existing = await rawPrisma.user.findUnique({ where: { email } });
     if (existing) {
       return jsonError(
         "An account with this email already exists",
@@ -89,38 +89,36 @@ export async function POST(request: Request) {
 
     const passwordHash = await hashPassword(body.password);
 
-    const user = await enterBypassRls(() =>
-      prisma.user.create({
-        data: {
-          email,
-          name,
-          role: body.role,
-          passwordHash,
-          ...(body.role === "STUDENT"
+    const user = await rawPrisma.user.create({
+      data: {
+        email,
+        name,
+        role: body.role,
+        passwordHash,
+        ...(body.role === "STUDENT"
+          ? {
+              studentProfile: {
+                create: {
+                  lawSchool: "",
+                  year: "L2",
+                  legalWritingCoursePassed: false,
+                  status: "PENDING",
+                },
+              },
+            }
+          : body.role === "ATTORNEY" || body.role === "JUDGE"
             ? {
-                studentProfile: {
+                clientProfile: {
                   create: {
-                    lawSchool: "",
-                    year: "L2",
-                    legalWritingCoursePassed: false,
-                    status: "PENDING",
+                    barNumber: barNumber!,
+                    barState: barState!,
                   },
                 },
               }
-            : body.role === "ATTORNEY" || body.role === "JUDGE"
-              ? {
-                  clientProfile: {
-                    create: {
-                      barNumber: barNumber!,
-                      barState: barState!,
-                    },
-                  },
-                }
-              : {}),
-        },
-        include: { studentProfile: true, clientProfile: true },
-      })
-    );
+            : {}),
+      },
+      include: { studentProfile: true, clientProfile: true },
+    });
 
     const { token, expiresAt } = await createSession(user.id);
     await writeAudit({

@@ -1,4 +1,4 @@
-import { prisma, enterBypassRls } from "@2dcite/db";
+import { rawPrisma } from "@2dcite/db";
 import { loginBodySchema } from "@2dcite/shared";
 import { z } from "zod";
 import { verifyPasswordOrDummy, verifyPassword } from "@/lib/password";
@@ -66,12 +66,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await enterBypassRls(() =>
-      prisma.user.findUnique({
-        where: { email },
-        include: { studentProfile: true },
-      })
-    );
+    const user = await rawPrisma.user.findUnique({
+      where: { email },
+      include: { studentProfile: true },
+    });
 
     const valid = await verifyPasswordOrDummy(
       body.password,
@@ -174,15 +172,13 @@ async function verifyAdminMfaCode(
         if (await verifyPassword(trimmed, hashes[i])) {
           const next = [...hashes];
           next.splice(i, 1);
-          await enterBypassRls(() =>
-            prisma.user.update({
-              where: { id: user.id },
-              data: {
-                mfaBackupCodesJson:
-                  next.length > 0 ? JSON.stringify(next) : null,
-              },
-            })
-          );
+          await rawPrisma.user.update({
+            where: { id: user.id },
+            data: {
+              mfaBackupCodesJson:
+                next.length > 0 ? JSON.stringify(next) : null,
+            },
+          });
           return true;
         }
       }
