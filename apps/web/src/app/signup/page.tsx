@@ -29,8 +29,8 @@ export default async function SignupPage({
         </h1>
         <p className="mt-3 text-sm text-muted">
           Students must complete eligibility verification before receiving
-          assignments. Attorneys and judges can submit jobs after Phase 2
-          payments ship.
+          assignments. Attorneys and judges can create an account and submit
+          documents for citation review.
         </p>
         <SignupForm initialRole={initialRole} />
         <p className="mt-6 text-sm text-muted">

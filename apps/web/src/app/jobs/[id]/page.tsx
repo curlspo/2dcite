@@ -57,8 +57,8 @@ export default async function JobDetailPage({
 
       {sp.paid === "1" && (
         <div className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-900">
-          Payment received. {FUNDS_HOLD_COPY.heldStatus} Matching will assign a
-          student in Phase 3.
+          Payment received. {FUNDS_HOLD_COPY.heldStatus} We will match an
+          approved student reviewer to your job.
         </div>
       )}
       {sp.cancelled === "1" && (

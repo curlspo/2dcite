@@ -17,14 +17,12 @@ const sourceSerif = Source_Serif_4({
 
 export const metadata: Metadata = {
   title: {
-    default: "2dcite — Independent Citation Review",
+    default:
+      "2dcite — Human in the Loop independent review of legal citations",
     template: "%s · 2dcite",
   },
   description:
-    "Match attorneys and judges with qualified law students for independent human-in-the-loop citation review. Certificate of Citation Review for risk mitigation — liability remains with the licensed attorney or judge.",
-  other: {
-    // Helps some AT tools identify language/content purpose
-  },
+    "Human in the Loop independent review of legal citations by qualified, vetted law students. For attorneys and judges. Certificate of Citation Review; not legal advice. Liability remains with the licensed professional.",
 };
 
 export default function RootLayout({

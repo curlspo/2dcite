@@ -24,13 +24,14 @@ import { PricingCards } from "@/components/marketing/PricingCards";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 
 export const metadata: Metadata = {
-  title: "Independent citation verification for the bar and the bench",
+  title:
+    "Human in the Loop independent review of legal citations by qualified, vetted law students",
   description:
-    "2dcite connects attorneys and judges with qualified law students who independently check legal citations against their sources—and document the review with a Certificate of Citation Review.",
+    "2dcite provides human-in-the-loop independent review of legal citations by qualified, vetted law students—for attorneys and judges. Certificate of Citation Review documentation; not legal advice.",
   openGraph: {
-    title: "2dcite — Independent citation verification",
+    title: "2dcite — Human in the Loop citation review",
     description:
-      "Human-in-the-loop citation review. Not legal advice. Liability remains with the licensed attorney or judge.",
+      "Independent review of legal citations by qualified, vetted law students. Not legal advice. Liability remains with the licensed attorney or judge.",
     url: "https://2dcite.com/",
     type: "website",
   },
@@ -68,8 +69,8 @@ export default function HomePage() {
             </h2>
             <p className="mt-2 max-w-2xl text-muted">
               Transparent per-job fees, or a monthly membership for regular
-              filers. Recommended max {PRICING_DEFAULTS.maxPages} pages per
-              review for MVP.
+              filers. Recommended maximum {PRICING_DEFAULTS.maxPages} pages per
+              review.
             </p>
             <PricingCards
               tiers={[
@@ -149,7 +150,7 @@ export default function HomePage() {
               For law students
             </h2>
             <p className="mt-3 max-w-2xl text-sm text-muted md:text-base">
-              Strict qualification is core to product trust. Students must:
+              Students who review citations must meet the following requirements:
             </p>
             <EligibilityChecklist />
             <p className="mt-6 text-sm text-muted">

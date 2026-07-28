@@ -22,7 +22,7 @@ export default function TermsPage() {
       <main id="main-content" tabIndex={-1}>
       <article className="prose-a11y mx-auto max-w-2xl px-6 py-16 prose-sm">
         <p className="text-xs text-muted">
-          Draft for counsel review · Disclaimer copy {DISCLAIMER_COPY_VERSION}
+          Version {DISCLAIMER_COPY_VERSION}
         </p>
         <h1 className="mt-2 font-serif text-3xl font-semibold text-ink">
           Terms of Service
@@ -30,11 +30,7 @@ export default function TermsPage() {
         <p className="mt-6 leading-relaxed text-muted">
           These Terms govern use of 2dcite (the “Platform”) at 2dcite.com and
           related applications. By creating an account or submitting a document,
-          you agree to these Terms.{" "}
-          <strong className="font-medium text-ink">
-            This draft is not a substitute for review by your counsel before
-            public launch.
-          </strong>
+          you agree to these Terms.
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">

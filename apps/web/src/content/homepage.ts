@@ -1,14 +1,15 @@
 /**
- * Homepage marketing copy — edit here to iterate without touching layout.
- * Editorial tone; human review as strongest practical layer, not infallible.
- * Prefer brevity: full narrative lives on /about.
+ * Homepage marketing copy — edit here without touching layout.
+ * Editorial tone; human review as a practical safeguard, not a warranty.
+ * Fuller narrative: /about.
  */
 
 export const homepageCopy = {
   hero: {
-    eyebrow: "Human judgment is the final safeguard.",
-    title: "Independent citation verification for the bar and the bench",
-    body: "AI can draft a convincing citation in seconds—even when the case does not exist or the quotation is wrong. 2dcite adds a qualified human reviewer before an error becomes a filing, a sanction, or a reputational crisis.",
+    eyebrow: "For the bar and the bench",
+    title:
+      "Human in the Loop independent review of legal citations by qualified, vetted law students.",
+    body: "AI can produce a convincing citation in seconds—even when the case does not exist or the quotation is wrong. 2dcite adds an independent human reviewer before an error becomes a filing, a sanction, or a reputational crisis.",
     support:
       "Approved 2L and 3L law students check citations against the underlying authorities and document the work in a Certificate of Citation Review.",
     primaryCta: { label: "Verify my citations", href: "/signup" },

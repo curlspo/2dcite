@@ -23,9 +23,7 @@ export default function PrivacyPage() {
       <SiteHeader />
       <main id="main-content" tabIndex={-1}>
         <article className="prose-a11y mx-auto max-w-2xl px-6 py-16">
-          <p className="text-xs text-muted">
-            Effective {EFFECTIVE} · For counsel confirmation as practices evolve
-          </p>
+          <p className="text-xs text-muted">Effective {EFFECTIVE}</p>
           <h1 className="mt-2 font-serif text-3xl font-semibold text-ink">
             Privacy Policy
           </h1>
