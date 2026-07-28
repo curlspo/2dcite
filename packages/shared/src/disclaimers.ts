@@ -51,9 +51,9 @@ export const CONFIDENTIALITY_CORE = {
 /** Intellectual property notice (product code and build) */
 export const IP_NOTICE = {
   copyright:
-    "The 2dcite software, source code, documentation, branding, and build artifacts are protected by United States copyright law and other applicable intellectual property laws. © 2dcite. All rights reserved.",
+    "The 2dcite software, source code, documentation, branding, and build artifacts are owned by 2dcite LLC and are protected by United States copyright law and other applicable intellectual property laws. © 2026 2dcite LLC. All rights reserved.",
   noLicense:
-    "No license—express, implied, or statutory—is granted to copy, modify, distribute, reverse engineer, create derivative works of, or commercially exploit the 2dcite code, build, or related materials, except as expressly authorized in a separate written agreement signed by 2dcite. Access to the hosted service under these Terms is a limited, revocable right to use the Platform as an end user, not a software license.",
+    "No license—express, implied, or statutory—is granted to copy, modify, distribute, reverse engineer, create derivative works of, or commercially exploit the 2dcite code, build, or related materials, except as expressly authorized in a separate written agreement signed by 2dcite LLC. Access to the hosted service under these Terms is a limited, revocable right to use the Platform as an end user, not a software license or transfer of ownership.",
 } as const;
 
 /**

@@ -28,20 +28,35 @@ export default function TermsPage() {
           Terms of Service
         </h1>
         <p className="mt-6 leading-relaxed text-muted">
-          These Terms govern use of 2dcite (the “Platform”) at 2dcite.com and
-          related applications. By creating an account or submitting a document,
-          you agree to these Terms.
+          These Terms of Service (the “Terms”) are a binding contract between
+          you and <strong className="font-medium text-ink">2dcite LLC</strong>{" "}
+          (“2dcite,” “we,” “us,” or “our”), a limited liability company. They
+          govern your access to and use of the 2dcite website at 2dcite.com, related
+          applications, and services (collectively, the “Platform” or
+          “Services”). By creating an account, submitting a document, or
+          otherwise using the Platform, you agree to these Terms.
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          <strong className="font-medium text-ink">
+            The Platform is owned and operated by 2dcite LLC.
+          </strong>{" "}
+          Your agreement for use of the Platform—including accounts, document
+          submission, payments, memberships, and related services—is solely with
+          2dcite LLC, not with any individual founder, student reviewer, or
+          third-party payment processor (except for separate terms those
+          processors may present at checkout).
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
           1. Nature of the service
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
-          2dcite matches licensed attorneys and judges with qualified law
-          students who perform an independent human-in-the-loop citation review
-          of uploaded briefs or court orders. Upon completion, the Platform may
-          issue a Certificate of Citation Review. The Platform is a technology
-          and marketplace service—not a law firm.
+          2dcite LLC operates a Platform that matches licensed attorneys and
+          judges with qualified law students who perform an independent
+          human-in-the-loop citation review of uploaded briefs or court orders.
+          Upon completion, the Platform may issue a Certificate of Citation
+          Review. The Platform is a technology and marketplace service owned by
+          2dcite LLC—not a law firm.
         </p>
         <p className="mt-3 leading-relaxed text-muted">
           {LIABILITY_CORE.notLegalAdvice}
@@ -201,34 +216,42 @@ export default function TermsPage() {
         <p className="mt-3 leading-relaxed text-muted">{IP_NOTICE.copyright}</p>
         <p className="mt-3 leading-relaxed text-muted">{IP_NOTICE.noLicense}</p>
         <p className="mt-3 leading-relaxed text-muted">
-          You retain ownership of materials you upload. You grant 2dcite a
+          You retain ownership of materials you upload. You grant 2dcite LLC a
           limited, worldwide, non-exclusive license to host, process, transmit,
           display, and store those materials solely to operate the Services
           (including matching, review, certificates, payment, security, and
           lawful retention).
+        </p>
+        <p className="mt-3 leading-relaxed text-muted">
+          The Platform, branding, software, and related intellectual property
+          are owned by 2dcite LLC (or its licensors). No transfer of ownership
+          of the Platform is granted under these Terms.
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
           12. Limitation of liability
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
-          To the fullest extent permitted by law, 2dcite and its operators are
-          not liable for professional malpractice claims arising from your
-          filings, for student review quality beyond the platform’s stated
-          facilitation role, for confidential materials you upload, for
-          unauthorized disclosure by third parties, or for consequential damages.
-          Aggregate liability related to a job is limited to fees paid for that
-          job. Some jurisdictions do not allow certain limitations.
+          To the fullest extent permitted by law, 2dcite LLC and its officers,
+          members, employees, and agents are not liable for professional
+          malpractice claims arising from your filings, for student review
+          quality beyond the Platform’s stated facilitation role, for
+          confidential materials you upload, for unauthorized disclosure by
+          third parties, or for consequential damages. Aggregate liability of
+          2dcite LLC related to a job is limited to fees paid to 2dcite LLC for
+          that job. Some jurisdictions do not allow certain limitations.
         </p>
 
         <h2 className="mt-10 font-serif text-xl font-semibold text-ink">
           13. Contact
         </h2>
         <p className="mt-3 leading-relaxed text-muted">
-          Questions:{" "}
+          For questions about these Terms or the Platform, contact 2dcite LLC
+          at{" "}
           <a className="text-accent underline" href={`mailto:${SUPPORT_EMAIL}`}>
             {SUPPORT_EMAIL}
           </a>
+          .
         </p>
 
         <p className="mt-10 text-sm text-muted">
