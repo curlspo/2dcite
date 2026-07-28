@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
 import { SkipLink } from "@/components/a11y/SkipLink";
+import { CopyrightNotice } from "@/components/legal/CopyrightNotice";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,10 +34,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${sourceSerif.variable} min-h-screen antialiased`}
+        className={`${geistSans.variable} ${sourceSerif.variable} flex min-h-screen flex-col antialiased`}
       >
         <SkipLink />
-        {children}
+        <div className="flex flex-1 flex-col">{children}</div>
+        <footer
+          className="border-t border-border bg-card px-6 py-4 text-center"
+          role="contentinfo"
+          aria-label="Copyright"
+        >
+          <CopyrightNotice />
+        </footer>
       </body>
     </html>
   );
