@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
-import { CONFIDENTIALITY_CORE } from "@2dcite/shared";
+import {
+  CONFIDENTIALITY_CORE,
+  STUDENT_CREDENTIAL_REVIEW_HOURS,
+  STUDENT_CREDENTIAL_TURNAROUND_COPY,
+} from "@2dcite/shared";
 import { getSessionUserFromCookies } from "@/lib/session";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { StudentApplicationForm } from "@/components/student/StudentApplicationForm";
@@ -14,14 +18,13 @@ export default async function StudentOnboardingPage() {
   return (
     <AppShell user={user}>
       <h1 className="font-serif text-2xl font-semibold text-ink">
-        Student eligibility
+        Student eligibility & credentials
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        You must be a currently enrolled 2L or 3L at an accredited law school,
-        have passed a legal writing course, and be recommended by a professor.
-        Applications are reviewed manually by 2dcite admin. Only{" "}
+        {STUDENT_CREDENTIAL_TURNAROUND_COPY} Only{" "}
         <strong className="font-medium text-ink">APPROVED</strong> students can
-        receive assignments (one at a time).
+        receive assignments (one at a time). Typical turnaround: up to{" "}
+        {STUDENT_CREDENTIAL_REVIEW_HOURS} hours after a complete application.
       </p>
       <div
         className="mt-4 max-w-2xl rounded-lg border border-border bg-accent-soft/50 p-4 text-sm text-muted"

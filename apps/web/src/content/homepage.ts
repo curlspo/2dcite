@@ -147,7 +147,7 @@ export const homepageCopy = {
 
   studentPath: {
     title: "Law students",
-    body: "2L/3L applicants with a .edu email may apply after meeting eligibility requirements and admin review.",
+    body: "A .edu email is required but not enough. 2L/3L applicants from top U.S. law schools submit proof of enrollment, legal writing, and a professor recommendation. Reviewer credentials are typically issued within 24 hours after a complete application.",
     cta: { label: "Apply as a student", href: "/signup?role=student" },
   },
 } as const;

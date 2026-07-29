@@ -28,9 +28,10 @@ export default async function SignupPage({
           Create an account
         </h1>
         <p className="mt-3 text-sm text-muted">
-          Students must complete eligibility verification before receiving
-          assignments. Attorneys and judges can create an account and submit
-          documents for citation review.
+          Students: a .edu email is required to register, then complete school
+          selection and credential review (typically within 24 hours) before
+          receiving assignments. Attorneys and judges can create an account and
+          submit documents for citation review.
         </p>
         <SignupForm initialRole={initialRole} />
         <p className="mt-6 text-sm text-muted">

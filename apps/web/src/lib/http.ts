@@ -55,6 +55,8 @@ const SAFE_CODES = new Set([
   "BAR_NUMBER_REQUIRED",
   "EDU_EMAIL_REQUIRED",
   "EMAIL_TAKEN",
+  "LAW_SCHOOL_REQUIRED",
+  "ALREADY_APPROVED",
 ]);
 
 function safeCode(status: number, code?: string): string {

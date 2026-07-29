@@ -23,7 +23,7 @@ const ROLES = [
   {
     value: "STUDENT",
     label: "Law student (2L/3L)",
-    desc: "Apply to review citations — .edu email required",
+    desc: ".edu email required; school + credentials reviewed within 24 hours",
   },
 ] as const;
 

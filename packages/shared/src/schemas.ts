@@ -12,6 +12,7 @@ import {
   sanitizeUserText,
 } from "./sanitize";
 import { isUsStateCode, normalizeUsStateCode } from "./us-states";
+import { isAllowedLawSchool, LAW_SCHOOL_NOT_LISTED } from "./law-schools";
 
 export const healthResponseSchema = z.object({
   ok: z.literal(true),
@@ -121,37 +122,70 @@ export const meResponseSchema = z.object({
 });
 export type MeResponse = z.infer<typeof meResponseSchema>;
 
-export const studentApplicationSchema = z.object({
-  lawSchool: z
-    .string()
-    .min(2)
-    .max(300)
-    .transform((v) => sanitizeUserText(v)),
-  year: z.enum([StudentYear.L2, StudentYear.L3]),
-  legalWritingCoursePassed: z.literal(true),
-  professorName: z
-    .string()
-    .min(2)
-    .max(200)
-    .transform((v) => sanitizeUserText(v)),
-  professorEmail: emailField,
-  /** Object storage keys set after presigned upload */
-  enrollmentProofKey: z
-    .string()
-    .min(1)
-    .max(500)
-    .transform((v) => sanitizeSingleLine(v)),
-  legalWritingProofKey: z
-    .string()
-    .min(1)
-    .max(500)
-    .transform((v) => sanitizeSingleLine(v)),
-  professorRecKey: z
-    .string()
-    .min(1)
-    .max(500)
-    .transform((v) => sanitizeSingleLine(v)),
-});
+export const studentApplicationSchema = z
+  .object({
+    /** Must be a curated top school or "Not listed" */
+    lawSchool: z
+      .string()
+      .min(2)
+      .max(300)
+      .transform((v) => sanitizeUserText(v)),
+    /** Required when lawSchool is "Not listed" */
+    lawSchoolOther: z
+      .string()
+      .max(300)
+      .optional()
+      .transform((v) =>
+        v === undefined || v.trim() === ""
+          ? undefined
+          : sanitizeUserText(v)
+      ),
+    year: z.enum([StudentYear.L2, StudentYear.L3]),
+    legalWritingCoursePassed: z.literal(true),
+    professorName: z
+      .string()
+      .min(2)
+      .max(200)
+      .transform((v) => sanitizeUserText(v)),
+    professorEmail: emailField,
+    /** Object storage keys set after presigned upload */
+    enrollmentProofKey: z
+      .string()
+      .min(1)
+      .max(500)
+      .transform((v) => sanitizeSingleLine(v)),
+    legalWritingProofKey: z
+      .string()
+      .min(1)
+      .max(500)
+      .transform((v) => sanitizeSingleLine(v)),
+    professorRecKey: z
+      .string()
+      .min(1)
+      .max(500)
+      .transform((v) => sanitizeSingleLine(v)),
+  })
+  .superRefine((data, ctx) => {
+    if (!isAllowedLawSchool(data.lawSchool)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["lawSchool"],
+        message:
+          "Select your law school from the list, or choose Not listed.",
+      });
+    }
+    if (
+      data.lawSchool === LAW_SCHOOL_NOT_LISTED &&
+      (!data.lawSchoolOther || data.lawSchoolOther.trim().length < 2)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["lawSchoolOther"],
+        message:
+          "Enter the name of your law school when selecting Not listed.",
+      });
+    }
+  });
 export type StudentApplicationBody = z.infer<typeof studentApplicationSchema>;
 
 export const createJobSchema = z.object({

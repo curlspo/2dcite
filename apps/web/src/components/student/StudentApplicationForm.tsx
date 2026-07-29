@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  LAW_SCHOOL_NOT_LISTED,
+  LAW_SCHOOL_OPTIONS,
+  STUDENT_CREDENTIAL_REVIEW_HOURS,
+  STUDENT_CREDENTIAL_TURNAROUND_COPY,
+} from "@2dcite/shared";
 import { apiFetch, BrowserApiError } from "@/lib/api-browser";
 import {
   TurnstileWidget,
@@ -26,11 +32,40 @@ async function uploadFile(file: File, purpose: string) {
   return apiFetch<{ key: string }>("/uploads", { method: "POST", body: form });
 }
 
+/** Parse stored value like "Not listed — Other School" back into form state */
+function parseInitialSchool(stored?: string | null): {
+  lawSchool: string;
+  lawSchoolOther: string;
+} {
+  if (!stored) return { lawSchool: "", lawSchoolOther: "" };
+  if (stored === LAW_SCHOOL_NOT_LISTED) {
+    return { lawSchool: LAW_SCHOOL_NOT_LISTED, lawSchoolOther: "" };
+  }
+  if (stored.startsWith(`${LAW_SCHOOL_NOT_LISTED} — `)) {
+    return {
+      lawSchool: LAW_SCHOOL_NOT_LISTED,
+      lawSchoolOther: stored.slice(`${LAW_SCHOOL_NOT_LISTED} — `.length),
+    };
+  }
+  if (LAW_SCHOOL_OPTIONS.includes(stored)) {
+    return { lawSchool: stored, lawSchoolOther: "" };
+  }
+  // Legacy free-text school → treat as not listed with the prior name
+  return { lawSchool: LAW_SCHOOL_NOT_LISTED, lawSchoolOther: stored };
+}
+
 export function StudentApplicationForm({ initial }: Props) {
   const router = useRouter();
-  const [lawSchool, setLawSchool] = useState(initial?.lawSchool || "");
+  const parsed = useMemo(
+    () => parseInitialSchool(initial?.lawSchool),
+    [initial?.lawSchool]
+  );
+  const [lawSchool, setLawSchool] = useState(parsed.lawSchool);
+  const [lawSchoolOther, setLawSchoolOther] = useState(parsed.lawSchoolOther);
   const [year, setYear] = useState(initial?.year || "L2");
-  const [professorName, setProfessorName] = useState(initial?.professorName || "");
+  const [professorName, setProfessorName] = useState(
+    initial?.professorName || ""
+  );
   const [professorEmail, setProfessorEmail] = useState(
     initial?.professorEmail || ""
   );
@@ -44,6 +79,7 @@ export function StudentApplicationForm({ initial }: Props) {
   const [loading, setLoading] = useState(false);
 
   const locked = initial?.status === "APPROVED";
+  const needsOther = lawSchool === LAW_SCHOOL_NOT_LISTED;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,12 +87,22 @@ export function StudentApplicationForm({ initial }: Props) {
     setError(null);
     setMessage(null);
 
+    if (!lawSchool) {
+      setError("Select your law school from the list.");
+      return;
+    }
+    if (needsOther && lawSchoolOther.trim().length < 2) {
+      setError("Enter the name of your law school when selecting Not listed.");
+      return;
+    }
     if (!legalWritingPassed) {
       setError("You must confirm you passed a legal writing course.");
       return;
     }
     if (!enrollmentFile || !writingFile || !recFile) {
-      setError("Upload enrollment proof, legal writing proof, and professor recommendation.");
+      setError(
+        "Upload enrollment proof, legal writing proof, and professor recommendation."
+      );
       return;
     }
     if (!captchaToken) {
@@ -76,6 +122,7 @@ export function StudentApplicationForm({ initial }: Props) {
         method: "POST",
         body: JSON.stringify({
           lawSchool,
+          ...(needsOther ? { lawSchoolOther: lawSchoolOther.trim() } : {}),
           year,
           legalWritingCoursePassed: true,
           professorName,
@@ -100,7 +147,22 @@ export function StudentApplicationForm({ initial }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 space-y-5 rounded-lg border border-border bg-card p-6">
+    <form
+      onSubmit={onSubmit}
+      className="mt-6 space-y-5 rounded-lg border border-border bg-card p-6"
+    >
+      <div
+        className="rounded-md border border-border bg-accent-soft/40 px-3 py-3 text-sm text-muted"
+        role="note"
+      >
+        <p className="font-medium text-ink">
+          Reviewer credentials · up to {STUDENT_CREDENTIAL_REVIEW_HOURS} hours
+        </p>
+        <p className="mt-1.5 leading-relaxed">
+          {STUDENT_CREDENTIAL_TURNAROUND_COPY}
+        </p>
+      </div>
+
       {initial?.status && (
         <div
           className={`rounded-md px-3 py-2 text-sm ${
@@ -113,10 +175,18 @@ export function StudentApplicationForm({ initial }: Props) {
         >
           Status: <strong>{initial.status}</strong>
           {initial.rejectionReason ? ` — ${initial.rejectionReason}` : null}
+          {initial.status === "PENDING" && (
+            <span className="mt-1 block text-muted">
+              Manual review in progress — typically within{" "}
+              {STUDENT_CREDENTIAL_REVIEW_HOURS} hours.
+            </span>
+          )}
         </div>
       )}
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger">{error}</p>
+        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger">
+          {error}
+        </p>
       )}
       {message && (
         <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-900">
@@ -124,24 +194,66 @@ export function StudentApplicationForm({ initial }: Props) {
         </p>
       )}
 
-      <label className="block text-sm">
-        <span className="text-muted">Law school</span>
-        <input
+      <div className="block text-sm">
+        <label htmlFor="student-law-school" className="font-medium text-ink">
+          Law school
+        </label>
+        <p id="student-law-school-hint" className="mt-1 text-xs text-muted">
+          Select from top U.S. law schools. A .edu address alone does not
+          qualify you as a reviewer.
+        </p>
+        <select
+          id="student-law-school"
+          name="lawSchool"
           required
           disabled={locked}
           value={lawSchool}
           onChange={(e) => setLawSchool(e.target.value)}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 disabled:opacity-60"
-        />
-      </label>
+          aria-describedby="student-law-school-hint"
+          className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2.5 text-ink disabled:opacity-60"
+        >
+          <option value="">Select law school…</option>
+          {LAW_SCHOOL_OPTIONS.map((school) => (
+            <option key={school} value={school}>
+              {school}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {needsOther && (
+        <div className="block text-sm">
+          <label
+            htmlFor="student-law-school-other"
+            className="font-medium text-ink"
+          >
+            School name (if not listed)
+          </label>
+          <input
+            id="student-law-school-other"
+            name="lawSchoolOther"
+            required={needsOther}
+            disabled={locked}
+            value={lawSchoolOther}
+            onChange={(e) => setLawSchoolOther(e.target.value)}
+            placeholder="Official name of your law school"
+            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 text-ink disabled:opacity-60"
+          />
+          <p className="mt-1 text-xs text-muted">
+            Applications from schools outside the listed set are reviewed
+            case-by-case and may take the full{" "}
+            {STUDENT_CREDENTIAL_REVIEW_HOURS}-hour window.
+          </p>
+        </div>
+      )}
 
       <label className="block text-sm">
-        <span className="text-muted">Year</span>
+        <span className="font-medium text-ink">Year</span>
         <select
           disabled={locked}
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 disabled:opacity-60"
+          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 disabled:opacity-60"
         >
           <option value="L2">2L</option>
           <option value="L3">3L</option>
@@ -163,32 +275,36 @@ export function StudentApplicationForm({ initial }: Props) {
       </label>
 
       <label className="block text-sm">
-        <span className="text-muted">Recommending professor — name</span>
+        <span className="font-medium text-ink">
+          Recommending professor — name
+        </span>
         <input
           required
           disabled={locked}
           value={professorName}
           onChange={(e) => setProfessorName(e.target.value)}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 disabled:opacity-60"
+          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 disabled:opacity-60"
         />
       </label>
 
       <label className="block text-sm">
-        <span className="text-muted">Professor email</span>
+        <span className="font-medium text-ink">Professor email</span>
         <input
           type="email"
           required
           disabled={locked}
           value={professorEmail}
           onChange={(e) => setProfessorEmail(e.target.value)}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 disabled:opacity-60"
+          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2.5 disabled:opacity-60"
         />
       </label>
 
       {!locked && (
         <>
           <label className="block text-sm">
-            <span className="text-muted">Enrollment proof (PDF/image)</span>
+            <span className="font-medium text-ink">
+              Enrollment proof (PDF/image)
+            </span>
             <input
               type="file"
               accept=".pdf,image/*"
@@ -198,7 +314,9 @@ export function StudentApplicationForm({ initial }: Props) {
             />
           </label>
           <label className="block text-sm">
-            <span className="text-muted">Legal writing course proof</span>
+            <span className="font-medium text-ink">
+              Legal writing course proof
+            </span>
             <input
               type="file"
               accept=".pdf,image/*"
@@ -208,7 +326,9 @@ export function StudentApplicationForm({ initial }: Props) {
             />
           </label>
           <label className="block text-sm">
-            <span className="text-muted">Professor recommendation letter</span>
+            <span className="font-medium text-ink">
+              Professor recommendation letter
+            </span>
             <input
               type="file"
               accept=".pdf,image/*"
@@ -229,8 +349,12 @@ export function StudentApplicationForm({ initial }: Props) {
             className="btn-primary"
             style={{ color: "#ffffff", backgroundColor: "#16325c" }}
           >
-            {loading ? "Submitting…" : "Submit for admin review"}
+            {loading ? "Submitting…" : "Submit for credential review"}
           </button>
+          <p className="text-xs text-muted">
+            Expect a decision within {STUDENT_CREDENTIAL_REVIEW_HOURS} hours
+            after a complete application (documents + school selection).
+          </p>
         </>
       )}
     </form>

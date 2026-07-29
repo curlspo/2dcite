@@ -1,10 +1,12 @@
 const DEFAULT_ITEMS = [
-  "Be currently enrolled at an accredited law school",
-  "Be a 2L or 3L",
+  "Use a school-issued .edu email (necessary, not sufficient)",
+  "Select a top U.S. law school from our list (or Not listed for case-by-case review)",
+  "Be currently enrolled as a 2L or 3L",
   "Have taken and passed a legal writing course",
   "Be recommended by a professor",
-  "Pass manual admin review of uploaded proof",
-  "Hold only one active assignment at a time",
+  "Upload enrollment, legal writing, and recommendation proof",
+  "Pass manual credential review (typically within 24 hours)",
+  "Hold only one active assignment at a time after approval",
 ] as const;
 
 /** Decorative verification-dot; meaning is in the text. */
