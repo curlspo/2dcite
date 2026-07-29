@@ -7,6 +7,7 @@ import {
   reviewDueAt,
 } from "@2dcite/db";
 import { writeAudit } from "@/lib/audit";
+import { allocateReviewerCode } from "@/lib/reviewer-code";
 
 /**
  * Assign a single QUEUED job to an available approved student.
@@ -37,10 +38,14 @@ async function assignJobIfPossibleInner(
   if (!student) return null;
 
   const now = new Date();
+  // Fresh anonymous code for this assignment (client-facing only)
+  const reviewerCode = await allocateReviewerCode();
+
   const updated = await prisma.job.update({
     where: { id: job.id },
     data: {
       studentId: student.id,
+      reviewerCode,
       status: "ASSIGNED",
       assignedAt: now,
       // accept window implicit from assignedAt + config
@@ -61,6 +66,7 @@ async function assignJobIfPossibleInner(
     entityId: job.id,
     metadata: {
       studentId: student.id,
+      reviewerCode,
       acceptDeadline: assignmentDeadline(now).toISOString(),
     },
   });
@@ -105,6 +111,7 @@ async function reassignTimedOutAssignmentsInner() {
       data: {
         status: "QUEUED",
         studentId: null,
+        reviewerCode: null,
         assignedAt: null,
       },
     });
@@ -113,7 +120,10 @@ async function reassignTimedOutAssignmentsInner() {
       action: "job.assign_timeout",
       entityType: "Job",
       entityId: job.id,
-      metadata: { previousStudentId: job.studentId },
+      metadata: {
+        previousStudentId: job.studentId,
+        previousReviewerCode: job.reviewerCode,
+      },
     });
   }
 
@@ -210,6 +220,7 @@ export async function declineAssignment(jobId: string, studentId: string) {
     data: {
       status: "QUEUED",
       studentId: null,
+      reviewerCode: null,
       assignedAt: null,
     },
   });
@@ -219,6 +230,7 @@ export async function declineAssignment(jobId: string, studentId: string) {
     action: "job.declined",
     entityType: "Job",
     entityId: jobId,
+    metadata: { previousReviewerCode: job.reviewerCode },
   });
 
   // Re-assign uses system bypass (other students)

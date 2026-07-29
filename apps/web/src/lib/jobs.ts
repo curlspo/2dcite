@@ -88,6 +88,17 @@ export function serializeJob(
     instructions: job.instructions,
     status: job.status,
     turnaroundTier: job.turnaroundTier,
+    /** Existence-only vs proposition-support (client-selected) */
+    reviewScope:
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (job as any).reviewScope ?? "EXISTENCE_ONLY",
+    /**
+     * Anonymous reviewer number for attorneys/judges (and everyone).
+     * Real student identity is never shown to clients.
+     */
+    reviewerCode:
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (job as any).reviewerCode ?? null,
     pdfKey: job.pdfKey,
     pdfFileName: job.pdfFileName,
     baseFeeCents: job.baseFeeCents,

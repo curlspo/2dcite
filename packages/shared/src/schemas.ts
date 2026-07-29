@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   CitationFindingCode,
   ClientPlatform,
+  ReviewScope,
   StudentYear,
   TurnaroundTier,
   UserRole,
@@ -205,6 +206,11 @@ export const createJobSchema = z.object({
     TurnaroundTier.STANDARD_48H,
     TurnaroundTier.RUSH,
   ]),
+  /** Required: existence-only vs proposition-support feedback */
+  reviewScope: z.enum([
+    ReviewScope.EXISTENCE_ONLY,
+    ReviewScope.PROPOSITION_SUPPORT,
+  ]),
   pdfKey: z
     .string()
     .min(1)
@@ -251,6 +257,8 @@ export const submitReviewSchema = z.object({
       v === undefined ? undefined : sanitizeUserText(v, { multiline: true })
     ),
   attestationAccepted: z.literal(true),
+  /** Student must attest they did not use AI for the review or report */
+  noAiAttestationAccepted: z.literal(true),
   disclaimerCopyVersion: z.string().min(1).max(40),
   platform: z.enum([ClientPlatform.WEB, ClientPlatform.IOS]),
 });

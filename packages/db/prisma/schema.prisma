@@ -81,6 +81,14 @@ enum PricingMode {
   MEMBERSHIP_DISCOUNT
 }
 
+/// Client-selected depth of citation review
+enum ReviewScope {
+  /// Verify cited authorities exist / are correctly identified
+  EXISTENCE_ONLY
+  /// Existence plus whether authority supports the asserted proposition
+  PROPOSITION_SUPPORT
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -215,6 +223,10 @@ model Job {
   instructions     String?
   status           JobStatus      @default(DRAFT)
   turnaroundTier   TurnaroundTier @default(STANDARD_48H)
+  /// Client-selected review depth (existence vs proposition support)
+  reviewScope      ReviewScope    @default(EXISTENCE_ONLY)
+  /// Client-facing anonymous reviewer id (e.g. R-482917); never real student name
+  reviewerCode     String?
   pdfKey           String?
   pdfFileName      String?
   baseFeeCents     Int
@@ -245,6 +257,7 @@ model Job {
   @@index([status])
   @@index([clientId])
   @@index([studentId])
+  @@index([reviewerCode])
   @@index([turnaroundTier, status, createdAt])
 }
 
@@ -271,6 +284,9 @@ model Certificate {
   documentTitle String
   clientName    String
   clientRole    UserRole
+  /// Anonymous code only on client-facing records (e.g. R-482917)
+  reviewerCode  String?
+  /// Deprecated for client display — kept null under blind matching
   studentName   String?
   lawSchool     String?
 

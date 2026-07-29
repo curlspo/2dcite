@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import {
   CitationFindingCode,
   DISCLAIMER_COPY_VERSION,
+  ReviewScope,
+  STUDENT_NO_AI_ATTESTATION,
+  STUDENT_NO_AI_POLICY,
   STUDENT_REVIEW_ATTESTATION,
 } from "@2dcite/shared";
 import { apiFetch, BrowserApiError } from "@/lib/api-browser";
@@ -15,8 +18,27 @@ type Finding = {
   notes: string;
 };
 
-const CODES = [
-  { value: CitationFindingCode.ACCURATE, label: "Accurate / supports proposition" },
+const EXISTENCE_CODES = [
+  {
+    value: CitationFindingCode.ACCURATE,
+    label: "Authority exists / correctly identified",
+  },
+  {
+    value: CitationFindingCode.NEEDS_ATTENTION,
+    label: "Existence unclear — needs attention",
+  },
+  {
+    value: CitationFindingCode.DOES_NOT_SUPPORT,
+    label: "Authority not found / does not appear to exist as cited",
+  },
+  { value: CitationFindingCode.FORMAT_ISSUE, label: "Format / citation form issue" },
+];
+
+const PROPOSITION_CODES = [
+  {
+    value: CitationFindingCode.ACCURATE,
+    label: "Accurate / supports proposition",
+  },
   { value: CitationFindingCode.NEEDS_ATTENTION, label: "Needs attention" },
   {
     value: CitationFindingCode.DOES_NOT_SUPPORT,
@@ -25,14 +47,24 @@ const CODES = [
   { value: CitationFindingCode.FORMAT_ISSUE, label: "Format issue" },
 ];
 
-export function ReviewForm({ jobId }: { jobId: string }) {
+export function ReviewForm({
+  jobId,
+  reviewScope = "EXISTENCE_ONLY",
+}: {
+  jobId: string;
+  reviewScope?: string;
+}) {
   const router = useRouter();
   const errorId = useId();
+  const isProposition = reviewScope === ReviewScope.PROPOSITION_SUPPORT;
+  const codes = isProposition ? PROPOSITION_CODES : EXISTENCE_CODES;
+
   const [findings, setFindings] = useState<Finding[]>([
     { citationText: "", code: CitationFindingCode.ACCURATE, notes: "" },
   ]);
   const [overallNotes, setOverallNotes] = useState("");
   const [attested, setAttested] = useState(false);
+  const [noAi, setNoAi] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,7 +80,13 @@ export function ReviewForm({ jobId }: { jobId: string }) {
     setError(null);
     setMessage(null);
     if (!attested) {
-      setError("You must accept the attestation.");
+      setError("You must accept the general attestation.");
+      return;
+    }
+    if (!noAi) {
+      setError(
+        "You must confirm you did not use generative AI for this review or report."
+      );
       return;
     }
     setLoading(true);
@@ -66,6 +104,7 @@ export function ReviewForm({ jobId }: { jobId: string }) {
           })),
           overallNotes: overallNotes || undefined,
           attestationAccepted: true as const,
+          noAiAttestationAccepted: true as const,
           disclaimerCopyVersion: DISCLAIMER_COPY_VERSION,
           platform: "WEB",
         }),
@@ -89,6 +128,26 @@ export function ReviewForm({ jobId }: { jobId: string }) {
       className="mt-6 space-y-6"
       aria-describedby={error ? errorId : undefined}
     >
+      <div
+        className="rounded-lg border border-border bg-accent-soft/40 px-4 py-3 text-sm text-muted"
+        role="note"
+      >
+        <p className="font-medium text-ink">
+          Requested scope:{" "}
+          {isProposition
+            ? "Existence + whether authorities support asserted propositions"
+            : "Existence / identification of cited authorities only"}
+        </p>
+        <p className="mt-1.5 leading-relaxed">{STUDENT_NO_AI_POLICY}</p>
+        {!isProposition && (
+          <p className="mt-1.5 leading-relaxed">
+            Do not evaluate or opine on whether authorities support the legal
+            propositions—only whether they exist and are correctly cited as
+            requested.
+          </p>
+        )}
+      </div>
+
       {error && (
         <div
           id={errorId}
@@ -151,7 +210,7 @@ export function ReviewForm({ jobId }: { jobId: string }) {
                   onChange={(e) => updateFinding(i, { code: e.target.value })}
                   className="mt-1 w-full rounded-md border border-border px-3 py-2"
                 >
-                  {CODES.map((c) => (
+                  {codes.map((c) => (
                     <option key={c.value} value={c.value}>
                       {c.label}
                     </option>
@@ -207,9 +266,26 @@ export function ReviewForm({ jobId }: { jobId: string }) {
         </span>
       </label>
 
+      <label className="flex gap-2 rounded-lg border border-danger/30 bg-red-50/50 p-4 text-sm text-muted">
+        <input
+          type="checkbox"
+          className="mt-1"
+          checked={noAi}
+          onChange={(e) => setNoAi(e.target.checked)}
+          required
+        />
+        <span>
+          <span className="font-medium text-ink">
+            No generative AI (required)
+          </span>
+          <br />
+          {STUDENT_NO_AI_ATTESTATION}
+        </span>
+      </label>
+
       <button
         type="submit"
-        disabled={loading || !attested}
+        disabled={loading || !attested || !noAi}
         aria-busy={loading}
         className="btn-primary"
         style={{ color: "#ffffff", backgroundColor: "#16325c" }}

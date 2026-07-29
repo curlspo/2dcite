@@ -72,3 +72,29 @@ export const CitationFindingCode = {
 } as const;
 export type CitationFindingCode =
   (typeof CitationFindingCode)[keyof typeof CitationFindingCode];
+
+/**
+ * What the client requests when ordering a citation review.
+ * Students must follow this scope; proposition feedback is only for PROPOSITION_SUPPORT.
+ */
+export const ReviewScope = {
+  /** Verify cited authorities exist and are correctly identified / formed */
+  EXISTENCE_ONLY: "EXISTENCE_ONLY",
+  /** Existence plus whether authorities support the asserted propositions */
+  PROPOSITION_SUPPORT: "PROPOSITION_SUPPORT",
+} as const;
+export type ReviewScope = (typeof ReviewScope)[keyof typeof ReviewScope];
+
+export const REVIEW_SCOPE_LABELS: Record<ReviewScope, string> = {
+  EXISTENCE_ONLY:
+    "Existence only — verify that cited cases/authorities actually exist",
+  PROPOSITION_SUPPORT:
+    "Existence + proposition — also feedback on whether authorities support the asserted propositions",
+};
+
+export const REVIEW_SCOPE_HELP: Record<ReviewScope, string> = {
+  EXISTENCE_ONLY:
+    "The student confirms whether each cited authority exists and is correctly identified. They do not evaluate whether the authority supports your legal proposition.",
+  PROPOSITION_SUPPORT:
+    "The student confirms existence and may also flag whether the cited authority appears to support the proposition for which it is offered. This is still independent verification—not legal advice.",
+};

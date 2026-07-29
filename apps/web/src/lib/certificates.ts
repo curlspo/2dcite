@@ -21,11 +21,10 @@ export type CertJobInput = {
   title: string;
   turnaroundTier: string;
   completedAt: Date | null;
+  /** Client-facing anonymous code (e.g. R-482917) */
+  reviewerCode?: string | null;
+  reviewScope?: string | null;
   client: { name: string; role: string; email: string };
-  student: {
-    name: string;
-    studentProfile?: { lawSchool: string | null } | null;
-  } | null;
   review: {
     findings: unknown;
     overallNotes: string | null;
@@ -136,15 +135,32 @@ export async function renderCertificatePdf(
     { size: 9, color: muted, gap: 8 }
   );
 
-  // Blind matching: client-facing certificate never names the student.
-  // Identity is retained in platform records for court/bar process only.
+  // Blind matching: client sees only a random reviewer code, never name/school.
   draw("Independent student reviewer", { size: 10, bold: true, gap: 2 });
+  const code =
+    job.reviewerCode?.trim() ||
+    "R-XXXXXX (assigned at matching; retained for this certificate)";
+  draw(`Reviewer number: ${code}`, { size: 10, bold: true, gap: 2 });
   draw(
-    "Qualified 2L/3L law-student reviewer (identity withheld under 2dcite blind-matching policy to protect candid review without retaliation).",
+    "Qualified 2L/3L law-student reviewer. Personal identity is withheld under 2dcite blind matching. The submitting party receives only this randomly assigned reviewer number.",
     { size: 9, color: muted, gap: 2 }
   );
   draw(
-    "Reviewer identity is retained by 2dcite for production to a court, bar association, or other lawful authority if required—not disclosed to the submitting party in ordinary use.",
+    "Legal name and credentials are retained by 2dcite LLC for production to a court, bar association, or other lawful authority if required—not disclosed to the submitting attorney or judge in ordinary use.",
+    { size: 8, color: muted, gap: 2 }
+  );
+  if (job.reviewScope) {
+    draw(
+      `Requested review scope: ${
+        job.reviewScope === "PROPOSITION_SUPPORT"
+          ? "Existence of authorities and whether they support asserted propositions"
+          : "Existence / identification of cited authorities only"
+      }`,
+      { size: 9, color: muted, gap: 2 }
+    );
+  }
+  draw(
+    "Student reviewers are prohibited from using generative AI to review authorities or issue reports.",
     { size: 8, color: muted, gap: 2 }
   );
   if (job.review?.submittedAt) {
@@ -302,17 +318,13 @@ async function issueCertificateAndReleaseFundsInner(jobId: string) {
         title: existing.title,
         turnaroundTier: existing.turnaroundTier,
         completedAt: existing.completedAt,
+        reviewerCode: existing.reviewerCode,
+        reviewScope: existing.reviewScope,
         client: {
           name: existing.client.name,
           role: existing.client.role,
           email: existing.client.email,
         },
-        student: existing.student
-          ? {
-              name: existing.student.name,
-              studentProfile: existing.student.studentProfile,
-            }
-          : null,
         review: existing.review,
       },
       certNumber,
@@ -336,14 +348,16 @@ async function issueCertificateAndReleaseFundsInner(jobId: string) {
           documentTitle: existing.title,
           clientName: existing.client.name,
           clientRole: existing.client.role,
-          studentName: existing.student?.name ?? null,
-          lawSchool: existing.student?.studentProfile?.lawSchool || null,
+          // Blind matching: never store real student name/school on certificate
+          reviewerCode: existing.reviewerCode,
+          studentName: null,
+          lawSchool: null,
         },
       });
     } else if (!again.pdfKey && pdfKey) {
       await tx.certificate.update({
         where: { id: again.id },
-        data: { pdfKey },
+        data: { pdfKey, reviewerCode: existing.reviewerCode },
       });
     }
 

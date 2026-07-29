@@ -9,6 +9,9 @@ import {
   FUNDS_HOLD_COPY,
   PRICING_DEFAULTS,
   MEMBERSHIP,
+  ReviewScope,
+  REVIEW_SCOPE_HELP,
+  REVIEW_SCOPE_LABELS,
   computeClientJobPricing,
 } from "@2dcite/shared";
 import { apiFetch, BrowserApiError } from "@/lib/api-browser";
@@ -36,6 +39,9 @@ export function NewJobForm() {
   const [title, setTitle] = useState("");
   const [instructions, setInstructions] = useState("");
   const [tier, setTier] = useState<"STANDARD_48H" | "RUSH">("STANDARD_48H");
+  const [reviewScope, setReviewScope] = useState<
+    "EXISTENCE_ONLY" | "PROPOSITION_SUPPORT"
+  >("EXISTENCE_ONLY");
   const [file, setFile] = useState<File | null>(null);
   const [acks, setAcks] = useState<Record<string, boolean>>({});
   const [disclaimerRead, setDisclaimerRead] = useState(false);
@@ -98,6 +104,7 @@ export function NewJobForm() {
           title,
           instructions: instructions || undefined,
           turnaroundTier: tier,
+          reviewScope,
           pdfKey: upload.key,
           acknowledgments: {
             copyVersion: DISCLAIMER_COPY_VERSION,
@@ -201,6 +208,49 @@ export function NewJobForm() {
           placeholder="Focus areas, known issues, etc. Not legal advice from the platform."
         />
       </div>
+
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium text-ink">
+          Review type (required)
+        </legend>
+        <p className="text-xs text-muted">
+          Choose what the independent student reviewer should verify. The
+          reviewer is assigned a random number only—identity is never shared
+          with you. Students may not use AI to review or write the report.
+        </p>
+        {(
+          [
+            ReviewScope.EXISTENCE_ONLY,
+            ReviewScope.PROPOSITION_SUPPORT,
+          ] as const
+        ).map((scope) => (
+          <label
+            key={scope}
+            className={`flex min-h-11 cursor-pointer gap-3 rounded-xl border p-3 ${
+              reviewScope === scope
+                ? "border-accent bg-accent-soft"
+                : "border-border bg-card"
+            }`}
+          >
+            <input
+              type="radio"
+              name="reviewScope"
+              value={scope}
+              checked={reviewScope === scope}
+              onChange={() => setReviewScope(scope)}
+              className="mt-1 h-4 w-4"
+            />
+            <span>
+              <span className="block font-medium text-ink">
+                {REVIEW_SCOPE_LABELS[scope]}
+              </span>
+              <span className="mt-1 block text-sm text-muted">
+                {REVIEW_SCOPE_HELP[scope]}
+              </span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-ink">Turnaround</legend>

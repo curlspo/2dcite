@@ -122,6 +122,13 @@ export const STUDENT_REVIEW_ATTESTATION =
   "Without prior written authorization from the submitting attorney or judge, I will not disclose that any citation failed verification, did not pass review, appeared fabricated or hallucinated, or that a particular lawyer or judge used non-existent or hallucinated authorities. " +
   "I will communicate findings only through the 2dcite platform to the submitting party (and will not share findings outside the platform).";
 
+/** Separate required attestation — no generative AI in review or report */
+export const STUDENT_NO_AI_ATTESTATION =
+  "I did not use generative artificial intelligence (including large language models, AI chat tools, or automated AI research assistants) to review the authorities, evaluate the citations, draft findings, or produce this report. All review work and reporting was performed by me personally without AI assistance.";
+
+export const STUDENT_NO_AI_POLICY =
+  "Student reviewers may not use generative AI to review cases, evaluate citations, or issue reports. Violation is grounds for removal from the reviewer program.";
+
 /** Certificate boilerplate (injected into generated PDF) */
 export const CERTIFICATE_BOILERPLATE = {
   title: "Certificate of Citation Review",

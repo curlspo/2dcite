@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@2dcite/db";
-import { FUNDS_HOLD_COPY } from "@2dcite/shared";
+import { FUNDS_HOLD_COPY, REVIEW_SCOPE_LABELS, ReviewScope } from "@2dcite/shared";
 import { getSessionUserFromCookies } from "@/lib/session";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { formatUsd, serializeJob } from "@/lib/jobs";
@@ -76,6 +76,15 @@ export default async function JobDetailPage({
           <dt className="text-muted">PDF</dt>
           <dd className="truncate text-ink">{job.pdfFileName || job.pdfKey || "—"}</dd>
         </div>
+        <div className="sm:col-span-2">
+          <dt className="text-muted">Review type</dt>
+          <dd className="text-ink">
+            {REVIEW_SCOPE_LABELS[
+              (job.reviewScope as keyof typeof REVIEW_SCOPE_LABELS) ||
+                ReviewScope.EXISTENCE_ONLY
+            ] ?? job.reviewScope}
+          </dd>
+        </div>
         <div>
           <dt className="text-muted">Payment</dt>
           <dd className="text-ink">
@@ -113,11 +122,23 @@ export default async function JobDetailPage({
       )}
 
       {job.studentAssigned && (
-        <p className="mt-4 text-sm text-muted">
-          {job.student
-            ? `Assigned to you (${job.status})`
-            : `Independent student reviewer assigned (${job.status}) — identity withheld under blind matching.`}
-        </p>
+        <div className="mt-4 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted">
+          {job.student ? (
+            <p>Assigned to you ({job.status})</p>
+          ) : (
+            <>
+              <p className="font-medium text-ink">
+                Reviewer number:{" "}
+                <span className="font-mono">{job.reviewerCode || "Assigned"}</span>
+              </p>
+              <p className="mt-1">
+                Independent student reviewer ({job.status}). Personal identity is
+                withheld under blind matching—you receive only this randomly
+                assigned number on the job and certificate.
+              </p>
+            </>
+          )}
+        </div>
       )}
 
       {job.certificate && (
@@ -126,6 +147,15 @@ export default async function JobDetailPage({
           <p className="mt-1 text-muted">
             {job.certificate.certNumber} · issued{" "}
             {new Date(job.certificate.issuedAt).toLocaleString()}
+            {job.reviewerCode ? (
+              <>
+                {" "}
+                · Reviewer{" "}
+                <span className="font-mono font-medium text-ink">
+                  {job.reviewerCode}
+                </span>
+              </>
+            ) : null}
           </p>
           {job.payout && (
             <p className="mt-2 text-muted">

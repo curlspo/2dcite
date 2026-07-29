@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@2dcite/db";
-import { STUDENT_REVIEW_ATTESTATION } from "@2dcite/shared";
+import {
+  REVIEW_SCOPE_LABELS,
+  ReviewScope,
+  STUDENT_NO_AI_POLICY,
+  STUDENT_REVIEW_ATTESTATION,
+} from "@2dcite/shared";
 import { getSessionUserFromCookies } from "@/lib/session";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { serializeJob } from "@/lib/jobs";
@@ -44,7 +49,27 @@ export default async function AssignmentDetailPage({
         Status: <strong className="text-ink">{job.status}</strong> ·{" "}
         {job.turnaroundTier}
         {job.dueAt ? ` · due ${new Date(job.dueAt).toLocaleString()}` : ""}
+        {job.reviewerCode ? (
+          <>
+            {" "}
+            · Your public code:{" "}
+            <span className="font-mono font-medium text-ink">
+              {job.reviewerCode}
+            </span>
+          </>
+        ) : null}
       </p>
+
+      <div className="mt-4 rounded-lg border border-border bg-card p-4 text-sm">
+        <p className="font-medium text-ink">Requested review type</p>
+        <p className="mt-1 text-muted">
+          {REVIEW_SCOPE_LABELS[
+            (job.reviewScope as keyof typeof REVIEW_SCOPE_LABELS) ||
+              ReviewScope.EXISTENCE_ONLY
+          ] ?? job.reviewScope}
+        </p>
+        <p className="mt-2 text-xs text-muted">{STUDENT_NO_AI_POLICY}</p>
+      </div>
 
       {job.instructions && (
         <div className="mt-4 rounded-lg border border-border bg-card p-4 text-sm">
@@ -73,9 +98,10 @@ export default async function AssignmentDetailPage({
         <>
           <p className="mt-8 text-sm text-muted">
             Record findings for each citation or issue area. Your work is an
-            independent verification layer only — not legal advice.
+            independent verification layer only — not legal advice. Do not use
+            generative AI.
           </p>
-          <ReviewForm jobId={job.id} />
+          <ReviewForm jobId={job.id} reviewScope={job.reviewScope} />
         </>
       )}
 

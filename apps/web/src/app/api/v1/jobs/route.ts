@@ -108,6 +108,7 @@ export async function POST(request: Request) {
           instructions: body.instructions?.trim() || null,
           status: "AWAITING_PAYMENT",
           turnaroundTier: body.turnaroundTier,
+          reviewScope: body.reviewScope,
           pdfKey: body.pdfKey,
           pdfFileName: body.pdfKey.split("/").pop() || null,
           baseFeeCents: pricing.baseFeeCents,

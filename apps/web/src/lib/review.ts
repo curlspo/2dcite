@@ -2,6 +2,7 @@ import "server-only";
 import { prisma, applyRlsConfig, enterUserRls, type Prisma } from "@2dcite/db";
 import {
   DISCLAIMER_COPY_VERSION,
+  STUDENT_NO_AI_ATTESTATION,
   STUDENT_REVIEW_ATTESTATION,
   type SubmitReviewBody,
 } from "@2dcite/shared";
@@ -28,6 +29,14 @@ export async function submitReview(
   }
   if (!body.attestationAccepted) {
     throw Object.assign(new Error("Attestation required"), { status: 400 });
+  }
+  if (!body.noAiAttestationAccepted) {
+    throw Object.assign(
+      new Error(
+        "You must attest that you did not use generative AI for this review or report."
+      ),
+      { status: 400 }
+    );
   }
 
   const job = await prisma.job.findUnique({
@@ -87,7 +96,10 @@ export async function submitReview(
         entityId: jobId,
         metadata: {
           findingsCount: body.findings.length,
+          reviewScope: job.reviewScope,
+          noAi: true,
           attestation: STUDENT_REVIEW_ATTESTATION.slice(0, 80),
+          noAiAttestation: STUDENT_NO_AI_ATTESTATION.slice(0, 80),
         },
       },
     });
