@@ -11,7 +11,11 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import type { JobDto } from "@2dcite/api-client";
 import { ApiError } from "@2dcite/api-client";
-import { FUNDS_HOLD_COPY } from "@2dcite/shared";
+import {
+  FUNDS_HOLD_COPY,
+  REVIEW_SCOPE_LABELS,
+  ReviewScope,
+} from "@2dcite/shared";
 import { useAuth } from "../../src/lib/auth";
 import { openCertificatePdf } from "../../src/lib/documents";
 import {
@@ -170,6 +174,13 @@ export default function JobDetailScreen() {
         <Muted>Created: {formatWhen(job.createdAt)}</Muted>
         <Muted>PDF: {job.pdfFileName || "—"}</Muted>
         <Muted>
+          Review type:{" "}
+          {REVIEW_SCOPE_LABELS[
+            (job.reviewScope as keyof typeof REVIEW_SCOPE_LABELS) ||
+              ReviewScope.EXISTENCE_ONLY
+          ] ?? job.reviewScope ?? "—"}
+        </Muted>
+        <Muted>
           Payment: {job.payment?.status || "—"}
           {job.payment?.paidAt ? ` · ${formatWhen(job.payment.paidAt)}` : ""}
         </Muted>
@@ -179,7 +190,20 @@ export default function JobDetailScreen() {
             ? `${job.payout.status} · $${(job.payout.studentAmountCents / 100).toFixed(2)}`
             : "Not held yet (pay first)"}
         </Muted>
-        {job.student ? <Muted>Student: {job.student.name}</Muted> : null}
+        {job.studentAssigned && !job.student ? (
+          <Muted>
+            Reviewer number:{" "}
+            <Text style={{ fontWeight: "700", color: colors.ink }}>
+              {job.reviewerCode || "Assigned"}
+            </Text>
+            {"\n"}
+            Identity withheld under blind matching — certificate shows this
+            number only.
+          </Muted>
+        ) : null}
+        {job.student ? (
+          <Muted>Assigned to you ({job.status})</Muted>
+        ) : null}
         {job.instructions ? (
           <>
             <Subtitle>Instructions</Subtitle>
@@ -207,6 +231,7 @@ export default function JobDetailScreen() {
           <Muted>
             {job.certificate.certNumber} · issued{" "}
             {formatWhen(job.certificate.issuedAt)}
+            {job.reviewerCode ? ` · Reviewer ${job.reviewerCode}` : ""}
           </Muted>
           {job.payout && (
             <Muted>

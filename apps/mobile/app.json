@@ -4,16 +4,24 @@
     "slug": "2dcite",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "scheme": "twodcite",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.twodcite.app",
       "buildNumber": "1",
+      "icon": "./assets/icon.png",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "2dcite needs access to select PDF documents for independent citation review.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "2dcite"
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
@@ -43,6 +51,7 @@
         "projectId": "replace-with-eas-project-id"
       }
     },
+    "owner": "curlspo",
     "experiments": {
       "typedRoutes": true
     }

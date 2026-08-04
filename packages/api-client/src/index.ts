@@ -37,6 +37,11 @@ export type JobDto = {
   instructions?: string | null;
   status: string;
   turnaroundTier: string;
+  /** EXISTENCE_ONLY | PROPOSITION_SUPPORT */
+  reviewScope?: string;
+  /** Client-facing anonymous code e.g. R-482917 */
+  reviewerCode?: string | null;
+  studentAssigned?: boolean;
   grossFeeCents: number;
   grossFeeDisplay?: string;
   studentFeeCents?: number;

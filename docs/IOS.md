@@ -14,26 +14,28 @@ Native iOS client for attorneys, judges, and approved law students. Shares the s
 | Bundle ID | `com.twodcite.app` |
 | URL scheme | `twodcite://` |
 
-## Features (Phase 6)
+## Features (Phase 6 → App Store path)
 
 **Clients (attorney / judge)**
 
-- Sign in / sign up
-- List jobs, create job (PDF pick, Standard/Rush, liability acknowledgments)
+- Sign in / sign up (bar state + number for attorney/judge)
+- List jobs, create job (PDF pick, Standard/Rush, **review scope**, liability acks)
 - Checkout (Stripe when configured; otherwise server dev-mock if enabled)
-- Job detail: payment hold status, findings, certificate link
+- Job detail: payment hold, **anonymous reviewer number**, findings, certificate
 
 **Students**
 
 - Assignments list (active + history)
 - Accept / decline
-- Submit citation findings + required attestation
+- Submit findings with **scope-aware codes**, general attestation, **no-AI attestation**
 - Certificate / payout status after completion
+- See own public **reviewer code** (R-######)
 
-**Not in v1 native app**
+**Not in v1 native app (use web)**
 
-- Student eligibility document uploads (use web)
-- Admin tools (use web)
+- Student eligibility document uploads + school dropdown
+- Admin tools
+- Password recovery / Turnstile captcha (web)
 - Push notifications
 
 ## Local development
@@ -64,19 +66,29 @@ Production / TestFlight builds default to `https://2dcite.com/api/v1` (see `src/
 
 ## App Store / EAS
 
-1. Create an Expo account and Apple Developer Program membership.
-2. Install EAS CLI: `npm i -g eas-cli` then `eas login`.
-3. From `apps/mobile`:
+### Prerequisites
+1. [Apple Developer Program](https://developer.apple.com/programs/) membership ($99/yr).
+2. Expo account: `npm i -g eas-cli && eas login`.
+3. App icons / splash are in `apps/mobile/assets/` (icon.png, splash.png).
 
+### Configure project (once)
 ```bash
-eas build:configure   # once
+cd apps/mobile
+eas build:configure
+# Copy the printed projectId into app.json → expo.extra.eas.projectId
+```
+
+### Production build + TestFlight
+```bash
+cd apps/mobile
 eas build --platform ios --profile production
+# After first successful build + App Store Connect app created:
+# set submit.production.ios.ascAppId in eas.json
 eas submit --platform ios --profile production
 ```
 
-4. In App Store Connect, set privacy nutrition labels to match data actually collected (account email, documents for review, payment via Stripe).
-5. Replace `ascAppId` in `eas.json` after the app exists in App Store Connect.
-6. Add App icons / splash assets before store submission (`app.json` currently has no custom icon path — Expo defaults apply for internal builds).
+4. In App Store Connect, set privacy nutrition labels (email, documents, payment via Stripe).
+5. Screenshots, description, support URL (`https://2dcite.com`), privacy URL (`https://2dcite.com/privacy`).
 
 ### Privacy / Info.plist notes
 

@@ -16,6 +16,10 @@ import {
   CitationFindingCode,
   ClientPlatform,
   DISCLAIMER_COPY_VERSION,
+  REVIEW_SCOPE_LABELS,
+  ReviewScope,
+  STUDENT_NO_AI_ATTESTATION,
+  STUDENT_NO_AI_POLICY,
   STUDENT_REVIEW_ATTESTATION,
   type CitationFindingCode as FindingCode,
 } from "@2dcite/shared";
@@ -39,7 +43,26 @@ type Finding = {
   notes: string;
 };
 
-const CODES = [
+const EXISTENCE_CODES = [
+  {
+    value: CitationFindingCode.ACCURATE,
+    label: "Authority exists / correctly identified",
+  },
+  {
+    value: CitationFindingCode.NEEDS_ATTENTION,
+    label: "Existence unclear — needs attention",
+  },
+  {
+    value: CitationFindingCode.DOES_NOT_SUPPORT,
+    label: "Authority not found / does not appear to exist as cited",
+  },
+  {
+    value: CitationFindingCode.FORMAT_ISSUE,
+    label: "Format / citation form issue",
+  },
+];
+
+const PROPOSITION_CODES = [
   {
     value: CitationFindingCode.ACCURATE,
     label: "Accurate / supports proposition",
@@ -77,6 +100,7 @@ export default function AssignmentDetailScreen() {
   ]);
   const [overallNotes, setOverallNotes] = useState("");
   const [attested, setAttested] = useState(false);
+  const [noAi, setNoAi] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
@@ -174,7 +198,13 @@ export default function AssignmentDetailScreen() {
     setError(null);
     setMessage(null);
     if (!attested) {
-      setError("You must accept the attestation.");
+      setError("You must accept the general attestation.");
+      return;
+    }
+    if (!noAi) {
+      setError(
+        "You must confirm you did not use generative AI for this review or report."
+      );
       return;
     }
     setSubmitting(true);
@@ -187,6 +217,7 @@ export default function AssignmentDetailScreen() {
         })),
         overallNotes: overallNotes || undefined,
         attestationAccepted: true as const,
+        noAiAttestationAccepted: true as const,
         disclaimerCopyVersion: DISCLAIMER_COPY_VERSION,
         platform: ClientPlatform.IOS,
       });
@@ -249,6 +280,7 @@ export default function AssignmentDetailScreen() {
       <Muted>
         {job.status} · {job.turnaroundTier}
         {job.dueAt ? ` · due ${formatWhen(job.dueAt)}` : ""}
+        {job.reviewerCode ? ` · Your code: ${job.reviewerCode}` : ""}
       </Muted>
       <ErrorBox message={error} />
       {message ? (
@@ -256,6 +288,17 @@ export default function AssignmentDetailScreen() {
           <Text style={styles.okText}>{message}</Text>
         </View>
       ) : null}
+
+      <Card>
+        <Subtitle>Requested review type</Subtitle>
+        <Muted>
+          {REVIEW_SCOPE_LABELS[
+            (job.reviewScope as keyof typeof REVIEW_SCOPE_LABELS) ||
+              ReviewScope.EXISTENCE_ONLY
+          ] ?? job.reviewScope ?? ReviewScope.EXISTENCE_ONLY}
+        </Muted>
+        <Muted>{STUDENT_NO_AI_POLICY}</Muted>
+      </Card>
 
       {job.instructions ? (
         <Card>
@@ -300,50 +343,64 @@ export default function AssignmentDetailScreen() {
           <Subtitle>Citation findings</Subtitle>
           <Muted>
             Record findings for each citation or issue area. Independent
-            verification only — not legal advice.
+            verification only — not legal advice. Do not use generative AI.
           </Muted>
+          {job.reviewScope !== ReviewScope.PROPOSITION_SUPPORT ? (
+            <Muted>
+              Scope is existence only — do not evaluate whether authorities
+              support legal propositions.
+            </Muted>
+          ) : null}
 
-          {findings.map((f, i) => (
-            <Card key={i}>
-              <Field
-                label="Citation / pin cite (optional)"
-                value={f.citationText}
-                onChangeText={(t) => updateFinding(i, { citationText: t })}
-                placeholder="e.g. Smith v. Jones, 123 U.S. 45 (2020)"
-              />
-              <Muted>Finding code</Muted>
-              {CODES.map((c) => (
-                <Pressable
-                  key={c.value}
-                  onPress={() => updateFinding(i, { code: c.value })}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: f.code === c.value }}
-                  style={[
-                    styles.code,
-                    f.code === c.value && styles.codeOn,
-                  ]}
-                >
-                  <Text style={styles.codeText}>{c.label}</Text>
-                </Pressable>
-              ))}
-              <Field
-                label="Notes (informational only)"
-                value={f.notes}
-                onChangeText={(t) => updateFinding(i, { notes: t })}
-                multiline
-                style={{ minHeight: 64, textAlignVertical: "top" }}
-              />
-              {findings.length > 1 && (
-                <Button
-                  title="Remove finding"
-                  variant="secondary"
-                  onPress={() =>
-                    setFindings((prev) => prev.filter((_, idx) => idx !== i))
-                  }
+          {findings.map((f, i) => {
+            const codes =
+              job.reviewScope === ReviewScope.PROPOSITION_SUPPORT
+                ? PROPOSITION_CODES
+                : EXISTENCE_CODES;
+            return (
+              <Card key={i}>
+                <Field
+                  label="Citation / pin cite (optional)"
+                  value={f.citationText}
+                  onChangeText={(t) => updateFinding(i, { citationText: t })}
+                  placeholder="e.g. Smith v. Jones, 123 U.S. 45 (2020)"
                 />
-              )}
-            </Card>
-          ))}
+                <Muted>Finding code</Muted>
+                {codes.map((c) => (
+                  <Pressable
+                    key={c.value}
+                    onPress={() => updateFinding(i, { code: c.value })}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: f.code === c.value }}
+                    style={[
+                      styles.code,
+                      f.code === c.value && styles.codeOn,
+                    ]}
+                  >
+                    <Text style={styles.codeText}>{c.label}</Text>
+                  </Pressable>
+                ))}
+                <Field
+                  label="Notes (informational only)"
+                  value={f.notes}
+                  onChangeText={(t) => updateFinding(i, { notes: t })}
+                  multiline
+                  style={{ minHeight: 64, textAlignVertical: "top" }}
+                />
+                {findings.length > 1 && (
+                  <Button
+                    title="Remove finding"
+                    variant="secondary"
+                    onPress={() =>
+                      setFindings((prev) =>
+                        prev.filter((_, idx) => idx !== i)
+                      )
+                    }
+                  />
+                )}
+              </Card>
+            );
+          })}
 
           <Button
             title="+ Add finding"
@@ -385,11 +442,28 @@ export default function AssignmentDetailScreen() {
             </Text>
           </Pressable>
 
+          <Pressable
+            onPress={() => setNoAi((a) => !a)}
+            style={styles.ack}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: noAi }}
+          >
+            <View style={[styles.box, noAi && styles.boxOn]}>
+              {noAi ? <Text style={styles.check}>✓</Text> : null}
+            </View>
+            <Text style={styles.ackText}>
+              <Text style={{ fontWeight: "700", color: colors.ink }}>
+                No generative AI (required){"\n"}
+              </Text>
+              {STUDENT_NO_AI_ATTESTATION}
+            </Text>
+          </Pressable>
+
           <Button
             title={submitting ? "Submitting…" : "Submit review"}
             onPress={submitReview}
             loading={submitting}
-            disabled={!attested}
+            disabled={!attested || !noAi}
           />
         </View>
       )}
